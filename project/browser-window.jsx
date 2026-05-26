@@ -109,6 +109,28 @@ function ChromeWindow({
   );
 }
 
+// BrowserWindow — convenience wrapper used by PublicProfileScreen
+function BrowserWindow({ url = 'example.com', theme, width, height, children }) {
+  const title = url.replace(/^https?:\/\//, '');
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
+      padding: '40px 40px 60px',
+      minHeight: 'calc(100vh - 44px)',
+      background: '#1a1612',
+    }}>
+      <ChromeWindow
+        tabs={[{ title }]}
+        url={url}
+        width={width || 980}
+        height={height || 720}
+      >
+        {children}
+      </ChromeWindow>
+    </div>
+  );
+}
+
 Object.assign(window, {
-  ChromeWindow, ChromeTabBar, ChromeToolbar, ChromeTab, ChromeTrafficLights,
+  ChromeWindow, ChromeTabBar, ChromeToolbar, ChromeTab, ChromeTrafficLights, BrowserWindow,
 });

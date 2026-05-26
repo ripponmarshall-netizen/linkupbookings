@@ -19,7 +19,20 @@ const SCREENS = [
   { key: 'markpaid',   num: '16', label: 'Mark paid' },
   { key: 'upgrade',    num: '17', label: 'Upgrade paywall' },
   { key: 'share',      num: '18', label: 'Share booking link' },
-  { key: 'public',     num: '19', label: 'Client booking flow' },
+  { key: 'public',         num: '19', label: 'Client booking flow' },
+  { key: 'notifications',  num: '20', label: 'Notifications' },
+  { key: 'waitlist',       num: '21', label: 'Waitlist' },
+  { key: 'dayend',         num: '22', label: 'Day-end summary' },
+  { key: 'push',           num: '23', label: 'Push notifications' },
+  { key: 'monthreview',    num: '24', label: 'Month in review' },
+  { key: 'profile',        num: '25', label: 'Public profile' },
+  { key: 'referral',       num: '26', label: 'Refer & earn' },
+  { key: 'states',         num: '27', label: 'Empty & error states' },
+  { key: 'noshow',         num: '28', label: 'No-show flow' },
+  { key: 'recurring',      num: '29', label: 'Recurring setup' },
+  { key: 'receipt',        num: '30', label: 'Receipt' },
+  { key: 'bulk',           num: '31', label: 'Bulk message' },
+  { key: 'cmdpalette',     num: '32', label: '⌘K palette' },
 ];
 
 function App() {
@@ -35,7 +48,12 @@ function App() {
     if (key === 'share')    { setScreen('calendar'); setModal('share');    return; }
     if (key === 'blockoff') { setScreen('calendar'); setModal('blockoff'); return; }
     if (key === 'fillslot') { setScreen('calendar'); setModal('fillslot'); return; }
-    if (key === 'markpaid') { setScreen('money');    setModal('markpaid'); return; }
+    if (key === 'markpaid')   { setScreen('money');    setModal('markpaid');   return; }
+    if (key === 'noshow')     { setScreen('calendar'); setModal('noshow');     return; }
+    if (key === 'recurring')  { setScreen('calendar'); setModal('recurring');  return; }
+    if (key === 'receipt')    { setScreen('money');    setModal('receipt');    return; }
+    if (key === 'bulk')       { setScreen('inbox');    setModal('bulk');       return; }
+    if (key === 'cmdpalette') { setModal('cmdpalette'); return; }
     if (key === 'empty')    { setEmptyData(true); setScreen('calendar'); setModal(null); return; }
     if (key === 'calendar') { setEmptyData(false); setScreen('calendar'); setModal(null); return; }
     setModal(null);
@@ -85,6 +103,22 @@ function App() {
     body = <SettingsScreen {...dashProps} />;
   } else if (screen === 'services') {
     body = <ServicesScreen {...dashProps} />;
+  } else if (screen === 'notifications') {
+    body = <NotificationsScreen {...dashProps} />;
+  } else if (screen === 'waitlist') {
+    body = <WaitlistScreen {...dashProps} />;
+  } else if (screen === 'dayend') {
+    body = <DayEndScreen {...dashProps} />;
+  } else if (screen === 'push') {
+    body = <PushScreen />;
+  } else if (screen === 'monthreview') {
+    body = <MonthReviewScreen />;
+  } else if (screen === 'profile') {
+    body = <PublicProfileScreen />;
+  } else if (screen === 'referral') {
+    body = <ReferralScreen {...dashProps} />;
+  } else if (screen === 'states') {
+    body = <StatesScreen />;
   }
 
   // active tab in nav
@@ -94,6 +128,11 @@ function App() {
                   : modal === 'blockoff' ? 'blockoff'
                   : modal === 'fillslot' ? 'fillslot'
                   : modal === 'markpaid' ? 'markpaid'
+                  : modal === 'noshow' ? 'noshow'
+                  : modal === 'recurring' ? 'recurring'
+                  : modal === 'receipt' ? 'receipt'
+                  : modal === 'bulk' ? 'bulk'
+                  : modal === 'cmdpalette' ? 'cmdpalette'
                   : (screen === 'calendar' && emptyData) ? 'empty'
                   : screen;
 
@@ -137,9 +176,9 @@ function App() {
       <div className="stage">
         <div style={{
           width: '100%', minHeight: 'calc(100vh - 44px)',
-          background: screen === 'mobile' || screen === 'public' ? '#1a1612' : 'var(--paper)',
+          background: (screen === 'mobile' || screen === 'public' || screen === 'push' || screen === 'monthreview') ? '#1a1612' : 'var(--paper)',
           display: 'flex', flexDirection: 'column',
-          minWidth: screen === 'landing' ? 1100 : screen === 'mobile' ? 1340 : screen === 'public' ? 'auto' : screen === 'onboarding' ? 1080 : 1280,
+          minWidth: screen === 'landing' ? 1100 : screen === 'mobile' ? 1340 : screen === 'public' ? 'auto' : screen === 'onboarding' ? 1080 : screen === 'push' || screen === 'monthreview' || screen === 'profile' ? 'auto' : 1280,
         }}>
           {body}
         </div>
@@ -155,6 +194,11 @@ function App() {
       {modal && typeof modal === 'object' && modal.appt && (
         <ApptDetailModal appt={modal.appt} onClose={() => setModal(null)} />
       )}
+      {modal === 'noshow' && <NoShowModal onClose={() => setModal(null)} />}
+      {modal === 'recurring' && <RecurringModal onClose={() => setModal(null)} />}
+      {modal === 'receipt' && <ReceiptModal onClose={() => setModal(null)} />}
+      {modal === 'bulk' && <BulkMessageModal onClose={() => setModal(null)} />}
+      {modal === 'cmdpalette' && <CommandPalette onClose={() => setModal(null)} />}
     </>
   );
 }
