@@ -7,7 +7,7 @@ import { findClient, findService, fmtTime, fmtJ } from '../data/seed.js';
 export default function MarkPaidModal({ appt, onClose }) {
   const { markPaid } = useApp();
 
-  const a = appt || { id: null, clientId: 'c3', serviceId: 's3', deposit: 1500, start: '11:00' };
+  const a = appt || { id: null, clientId: 'c3', serviceId: 's3', deposit: 1500, start: 11 };
   const c = findClient(a.clientId);
   const s = findService(a.serviceId);
   const balance = s.price - (a.deposit || 0);
