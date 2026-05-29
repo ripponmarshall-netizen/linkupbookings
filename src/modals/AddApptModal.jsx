@@ -14,24 +14,20 @@ export default function AddApptModal({ onClose }) {
   const [requireDeposit, setRequireDeposit] = useState(true);
 
   function handleConfirm() {
-    // Map display time to HH:MM format
+    // Map display time to a decimal hour (9.5 = 9:30am) to match seed data
     const timeMap = {
-      '9:00am': '09:00', '10:00am': '10:00', '11:00am': '11:00',
-      '12:00pm': '12:00', '1:30pm': '13:30', '3:00pm': '15:00',
-      '4:30pm': '16:30', '6:00pm': '18:00',
+      '9:00am': 9, '10:00am': 10, '11:00am': 11,
+      '12:00pm': 12, '1:30pm': 13.5, '3:00pm': 15,
+      '4:30pm': 16.5, '6:00pm': 18,
     };
-    const startStr = timeMap[time] || '11:00';
-    const [h, m] = startStr.split(':').map(Number);
-    const dur = service.duration;
-    const endTotalMin = h * 60 + m + dur;
-    const endH = String(Math.floor(endTotalMin / 60)).padStart(2, '0');
-    const endM = String(endTotalMin % 60).padStart(2, '0');
+    const start = timeMap[time] ?? 11;
+    const end = start + service.duration / 60;
 
     addAppt({
       id: 'a' + Date.now(),
       dayIdx,
-      start: startStr,
-      end: `${endH}:${endM}`,
+      start,
+      end,
       clientId: client.id,
       serviceId: service.id,
       status: 'confirmed',

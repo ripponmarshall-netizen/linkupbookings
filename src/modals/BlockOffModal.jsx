@@ -20,7 +20,7 @@ export default function BlockOffModal({ onClose }) {
     { l: 'Just blocked',   i: '—',  color: 'var(--muted)'     },
   ];
 
-  // Time string to HH:MM
+  // Time string ("1:30pm") to a decimal hour (13.5) to match seed data
   function parseDisplayTime(t) {
     const match = t.match(/^(\d+)(?::(\d+))?(am|pm)$/i);
     if (!match) return t;
@@ -29,7 +29,7 @@ export default function BlockOffModal({ onClose }) {
     const ampm = match[3].toLowerCase();
     if (ampm === 'pm' && h !== 12) h += 12;
     if (ampm === 'am' && h === 12) h = 0;
-    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+    return h + m / 60;
   }
 
   function handleBlock() {
