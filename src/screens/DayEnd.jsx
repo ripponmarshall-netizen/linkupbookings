@@ -18,7 +18,7 @@ export default function DayEndScreen() {
       }
     >
       <div style={{ flex: 1, overflow: 'auto', padding: '24px 32px', background: 'var(--paper)' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: 32, maxWidth: 1180, margin: '0 auto' }}>
+        <div className="dayend-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: 32, maxWidth: 1180, margin: '0 auto' }}>
           {/* breakdown */}
           <div>
             <div style={{

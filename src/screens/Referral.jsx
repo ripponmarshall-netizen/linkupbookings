@@ -34,19 +34,19 @@ export default function ReferralScreen() {
             borderRadius: '50%', background: 'radial-gradient(circle, rgba(200,155,61,0.18), transparent 60%)',
           }} />
 
-          <div style={{ maxWidth: 1100, margin: '0 auto', display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 40, position: 'relative' }}>
+          <div className="referral-grid" style={{ maxWidth: 1100, margin: '0 auto', display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 40, position: 'relative' }}>
             <div>
               <div className="mono" style={{ fontSize: 11, color: '#c89b3d', letterSpacing: '0.1em', marginBottom: 14 }}>
                 ✦ FOR YUH FELLOW HUSTLERS
               </div>
-              <h2 className="serif" style={{ fontSize: 56, margin: '0 0 16px', lineHeight: 0.98, fontWeight: 400, letterSpacing: '-0.015em' }}>
+              <h2 className="serif referral-hero-title" style={{ fontSize: 56, margin: '0 0 16px', lineHeight: 0.98, fontWeight: 400, letterSpacing: '-0.015em' }}>
                 Refer another owner,<br/>
                 <span style={{ fontStyle: 'italic', color: 'var(--ochre)' }}>get a month free.</span>
               </h2>
               <p style={{ color: '#c8bda4', fontSize: 15, lineHeight: 1.55, maxWidth: 480, margin: '0 0 26px' }}>
                 Yuh barber friend, yuh stylist cousin, yuh lash girl — every owner who upgrades from yuh link gets J$400 off, and yuh get J$400 off too. No limit.
               </p>
-              <div style={{ display: 'flex', gap: 10 }}>
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                 <button className="btn btn-terracotta btn-lg">
                   {Icon.whatsapp({ width: 16, height: 16 })} Share on WhatsApp
                 </button>
@@ -97,7 +97,7 @@ export default function ReferralScreen() {
 
         {/* referrals list + preview */}
         <div style={{ padding: '40px 32px', background: 'var(--paper)' }}>
-          <div style={{ maxWidth: 1100, margin: '0 auto', display: 'grid', gridTemplateColumns: '1.3fr 1fr', gap: 40 }}>
+          <div className="referral-grid" style={{ maxWidth: 1100, margin: '0 auto', display: 'grid', gridTemplateColumns: '1.3fr 1fr', gap: 40 }}>
             <div>
               <div className="label" style={{ marginBottom: 14 }}>Yuh referrals · {referrals.length}</div>
               <div style={{

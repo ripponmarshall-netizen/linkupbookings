@@ -44,7 +44,7 @@ export default function RemindersScreen() {
       title="Reminders & messages"
       sub="Auto-sent so yuh don't haffi remember"
       action={
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <div className="hide-mobile" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           <span className="chip chip-forest" style={{ fontSize: 11 }}>
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--forest)' }} />
             327 sent this month · 4 no-shows avoided
@@ -52,9 +52,9 @@ export default function RemindersScreen() {
         </div>
       }
     >
-      <div style={{ display: 'flex', flex: 1, minHeight: 0, background: 'var(--paper)' }}>
+      <div className="split-pane" style={{ display: 'flex', flex: 1, minHeight: 0, background: 'var(--paper)' }}>
         {/* template list */}
-        <div style={{
+        <div className="split-pane-rail" style={{
           width: 280, borderRight: '1px solid var(--line)',
           padding: '20px 16px', flexShrink: 0,
         }}>
@@ -86,7 +86,7 @@ export default function RemindersScreen() {
         </div>
 
         {/* editor */}
-        <div style={{ flex: 1, padding: 32, overflowY: 'auto', minWidth: 0 }}>
+        <div className="split-pane-body" style={{ flex: 1, padding: 32, overflowY: 'auto', minWidth: 0 }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 32, maxWidth: 1100 }}>
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 18 }}>

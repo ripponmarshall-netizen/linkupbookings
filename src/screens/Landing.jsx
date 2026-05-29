@@ -65,7 +65,7 @@ export default function LandingScreen() {
       </div>
 
       {/* social proof strip */}
-      <div style={{
+      <div className="landing-strip" style={{
         borderTop: '1px solid var(--line)', borderBottom: '1px solid var(--line)',
         padding: '20px 56px', background: 'var(--paper-2)',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16,
@@ -147,7 +147,7 @@ export default function LandingScreen() {
       </div>
 
       {/* footer */}
-      <div style={{ background: 'var(--ink)', color: '#dccfb6', padding: '48px 56px 36px' }}>
+      <div className="landing-footer" style={{ background: 'var(--ink)', color: '#dccfb6', padding: '48px 56px 36px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', maxWidth: 1280, margin: '0 auto', alignItems: 'flex-start', flexWrap: 'wrap', gap: 32 }}>
           <Logo size={18} color="#fbf6ec" />
           <div style={{ display: 'flex', gap: 64, fontSize: 13, flexWrap: 'wrap' }}>
@@ -243,7 +243,7 @@ function PricingTable({ onCta }) {
       background: 'var(--card)', borderRadius: 18, overflow: 'hidden',
       border: '1px solid var(--line)', boxShadow: 'var(--shadow-md)',
     }}>
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', borderBottom: '1px solid var(--line)' }}>
+      <div className="pricing-grid" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', borderBottom: '1px solid var(--line)' }}>
         <div style={{ padding: '28px 24px' }}>
           <div className="label">Compare</div>
         </div>
@@ -273,7 +273,7 @@ function PricingTable({ onCta }) {
       </div>
 
       {rows.map(([label, free, pro], i) => (
-        <div key={i} style={{
+        <div key={i} className="pricing-grid" style={{
           display: 'grid', gridTemplateColumns: '2fr 1fr 1fr',
           background: i % 2 === 0 ? 'var(--card-warm)' : 'var(--card)',
           borderBottom: i < rows.length - 1 ? '1px solid var(--line)' : 'none',

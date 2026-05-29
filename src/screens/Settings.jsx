@@ -21,9 +21,9 @@ export default function SettingsScreen() {
 
   return (
     <DashboardShell title="Settings" sub="Business, hours, integrations">
-      <div style={{ display: 'flex', height: '100%', minHeight: 0 }}>
+      <div className="split-pane" style={{ display: 'flex', height: '100%', minHeight: 0 }}>
         {/* Section nav */}
-        <div style={{ width: 220, borderRight: '1px solid var(--line)', background: 'var(--card-warm)', flexShrink: 0, overflowY: 'auto' }}>
+        <div className="split-pane-rail" style={{ width: 220, borderRight: '1px solid var(--line)', background: 'var(--card-warm)', flexShrink: 0, overflowY: 'auto' }}>
           <div style={{ padding: '16px 0' }}>
             {SECTIONS.map(s => (
               <button key={s.key} onClick={() => setSection(s.key)} style={{
@@ -44,7 +44,7 @@ export default function SettingsScreen() {
         </div>
 
         {/* Content */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '28px 32px' }}>
+        <div className="split-pane-body" style={{ flex: 1, overflowY: 'auto', padding: '28px 32px' }}>
           {section === 'profile' && <ProfileSection />}
           {section === 'hours'   && <HoursSection />}
           {section === 'payments' && <PaymentsSection isPro={isPro} />}

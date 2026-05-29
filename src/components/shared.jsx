@@ -67,20 +67,29 @@ export function Toggle({ on, onChange, size = 'md' }) {
   const gap = (h - ball) / 2;
   return (
     <button
+      type="button"
+      role="switch"
+      aria-checked={on}
       onClick={() => onChange(!on)}
       style={{
-        width: w, height: h, borderRadius: h,
-        background: on ? 'var(--forest)' : 'var(--line-2)',
-        position: 'relative', flexShrink: 0, transition: 'background 160ms',
+        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+        minWidth: 44, minHeight: 44, flexShrink: 0, background: 'none',
+        padding: `${Math.max(0, (44 - h) / 2)}px ${Math.max(0, (44 - w) / 2)}px`,
       }}
     >
-      <div style={{
-        position: 'absolute', top: gap,
-        left: on ? w - ball - gap : gap,
-        width: ball, height: ball,
-        borderRadius: '50%', background: '#fff',
-        transition: 'left 160ms',
-      }} />
+      <span style={{
+        display: 'block', width: w, height: h, borderRadius: h,
+        background: on ? 'var(--forest)' : 'var(--line-2)',
+        position: 'relative', flexShrink: 0, transition: 'background 160ms',
+      }}>
+        <span style={{
+          position: 'absolute', top: gap,
+          left: on ? w - ball - gap : gap,
+          width: ball, height: ball,
+          borderRadius: '50%', background: '#fff',
+          transition: 'left 160ms',
+        }} />
+      </span>
     </button>
   );
 }

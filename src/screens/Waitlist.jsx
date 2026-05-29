@@ -57,7 +57,7 @@ export default function WaitlistScreen() {
       }
     >
       {/* tabs */}
-      <div style={{
+      <div className="tab-bar" style={{
         padding: '0 32px', borderBottom: '1px solid var(--line)',
         display: 'flex', gap: 4, background: 'var(--card-warm)',
       }}>
@@ -150,7 +150,7 @@ function WaitlistRow({ w }) {
   const matched = !!w.matched;
 
   return (
-    <div style={{
+    <div className="waitlist-row" style={{
       display: 'grid', gridTemplateColumns: 'auto auto 1fr auto auto', gap: 16,
       padding: 16, marginBottom: 8,
       background: matched ? 'var(--card)' : 'var(--card-warm)',
