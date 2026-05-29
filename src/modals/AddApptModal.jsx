@@ -2,13 +2,13 @@ import { useState } from 'react';
 import ModalShell from '../components/ModalShell.jsx';
 import { Icon, Avatar } from '../components/shared.jsx';
 import { useApp } from '../context/AppContext.jsx';
-import { CLIENTS, SERVICES, DAYS, DAY_DATES, fmtJ } from '../data/seed.js';
+import { DAYS, DAY_DATES, fmtJ } from '../data/seed.js';
 
 export default function AddApptModal({ onClose }) {
-  const { addAppt } = useApp();
+  const { addAppt, clients, services } = useApp();
   const [step, setStep] = useState(1);
   const [client, setClient] = useState(null);
-  const [service, setService] = useState(SERVICES[0]);
+  const [service, setService] = useState(services[0]);
   const [dayIdx, setDayIdx] = useState(1);
   const [time, setTime] = useState('11:00am');
   const [requireDeposit, setRequireDeposit] = useState(true);
@@ -20,6 +20,7 @@ export default function AddApptModal({ onClose }) {
       '12:00pm': 12, '1:30pm': 13.5, '3:00pm': 15,
       '4:30pm': 16.5, '6:00pm': 18,
     };
+    if (!client || !service) return;
     const start = timeMap[time] ?? 11;
     const end = start + service.duration / 60;
 
@@ -74,7 +75,7 @@ export default function AddApptModal({ onClose }) {
             </div>
             <div className="label" style={{ marginBottom: 8 }}>Recent</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              {CLIENTS.slice(0, 5).map(c => (
+              {clients.slice(0, 5).map(c => (
                 <button
                   key={c.id}
                   onClick={() => { setClient(c); setStep(2); }}
@@ -100,7 +101,7 @@ export default function AddApptModal({ onClose }) {
 
         {step === 2 && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
-            {SERVICES.map(s => (
+            {services.map(s => (
               <button
                 key={s.id}
                 onClick={() => { setService(s); setStep(3); }}
@@ -175,7 +176,7 @@ export default function AddApptModal({ onClose }) {
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 500 }}>Require deposit</div>
                   <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>
-                    25% · {fmtJ(Math.round(service.price * 0.25))} via WhatsApp link
+                    25% · {fmtJ(Math.round((service?.price ?? 0) * 0.25))} via WhatsApp link
                   </div>
                 </div>
                 <button

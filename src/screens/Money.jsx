@@ -2,13 +2,13 @@ import { useState } from 'react';
 import DashboardShell from '../components/DashboardShell.jsx';
 import { Icon, Avatar } from '../components/shared.jsx';
 import { useApp } from '../context/AppContext.jsx';
-import { findClient, findService, fmtJ, fmtTime } from '../data/seed.js';
+import { fmtJ, fmtTime } from '../data/seed.js';
 import MarkPaidModal from '../modals/MarkPaidModal.jsx';
 
 const TODAY_IDX = 1;
 
 export default function MoneyScreen() {
-  const { appts, markPaid } = useApp();
+  const { appts, clients, services } = useApp();
   const [tab, setTab] = useState('today');
   const [modal, setModal] = useState(null);
 
@@ -44,8 +44,8 @@ export default function MoneyScreen() {
         </div>
 
         <div style={{ flex: 1, overflowY: 'auto' }}>
-          {tab === 'today' && <TodayCloseOut appts={appts} onMarkPaid={() => setModal('markpaid')} />}
-          {tab === 'week'  && <WeekTakings appts={appts} />}
+          {tab === 'today' && <TodayCloseOut appts={appts} clients={clients} services={services} onMarkPaid={() => setModal('markpaid')} />}
+          {tab === 'week'  && <WeekTakings appts={appts} services={services} />}
           {tab === 'month' && <MonthTakings />}
         </div>
       </DashboardShell>
@@ -55,7 +55,9 @@ export default function MoneyScreen() {
   );
 }
 
-function TodayCloseOut({ appts, onMarkPaid }) {
+function TodayCloseOut({ appts, clients, services, onMarkPaid }) {
+  const findClient = (id) => clients.find(c => c.id === id) || {};
+  const findService = (id) => services.find(s => s.id === id) || {};
   const todaysAppts = appts.filter(a => a.dayIdx === TODAY_IDX);
   const paid   = todaysAppts.filter(a => a.paid);
   const unpaid = todaysAppts.filter(a => !a.paid);
@@ -138,7 +140,8 @@ function TodayCloseOut({ appts, onMarkPaid }) {
   );
 }
 
-function WeekTakings({ appts }) {
+function WeekTakings({ appts, services }) {
+  const findService = (id) => services.find(s => s.id === id) || {};
   const DAYS_LABEL = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
   const byDay = DAYS_LABEL.map((d, i) => {
     const dayAppts = appts.filter(a => a.dayIdx === i);

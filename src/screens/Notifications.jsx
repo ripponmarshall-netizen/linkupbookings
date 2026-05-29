@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import DashboardShell from '../components/DashboardShell.jsx';
 import { Icon } from '../components/shared.jsx';
 
@@ -16,19 +17,21 @@ const NOTIFS = [
 ];
 
 export default function NotificationsScreen() {
+  const navigate = useNavigate();
   const [filter, setFilter] = React.useState('all');
-  const unread = NOTIFS.filter(n => n.unread).length;
+  const [items, setItems] = React.useState(NOTIFS);
+  const unread = items.filter(n => n.unread).length;
 
   const filters = [
-    { k: 'all', l: 'All', n: NOTIFS.length },
+    { k: 'all', l: 'All', n: items.length },
     { k: 'unread', l: 'Unread', n: unread },
-    { k: 'booking', l: 'Bookings', n: NOTIFS.filter(n => ['booking','noshow'].includes(n.kind)).length },
-    { k: 'payment', l: 'Payments', n: NOTIFS.filter(n => n.kind === 'payment').length },
-    { k: 'message', l: 'Messages', n: NOTIFS.filter(n => n.kind === 'message').length },
-    { k: 'ai', l: '✨ AI', n: NOTIFS.filter(n => n.kind === 'ai').length },
+    { k: 'booking', l: 'Bookings', n: items.filter(n => ['booking','noshow'].includes(n.kind)).length },
+    { k: 'payment', l: 'Payments', n: items.filter(n => n.kind === 'payment').length },
+    { k: 'message', l: 'Messages', n: items.filter(n => n.kind === 'message').length },
+    { k: 'ai', l: '✨ AI', n: items.filter(n => n.kind === 'ai').length },
   ];
 
-  const shown = NOTIFS.filter(n => {
+  const shown = items.filter(n => {
     if (filter === 'all') return true;
     if (filter === 'unread') return n.unread;
     if (filter === 'booking') return ['booking', 'noshow'].includes(n.kind);
@@ -44,8 +47,8 @@ export default function NotificationsScreen() {
       sub={`${unread} unread · everything in one place`}
       action={
         <div style={{ display: 'flex', gap: 6 }}>
-          <button className="btn btn-secondary btn-sm">{Icon.settings({ width: 13, height: 13 })} Notif settings</button>
-          <button className="btn btn-secondary btn-sm">Mark all read</button>
+          <button className="btn btn-secondary btn-sm" onClick={() => navigate('/settings')}>{Icon.settings({ width: 13, height: 13 })} Notif settings</button>
+          <button className="btn btn-secondary btn-sm" onClick={() => setItems(list => list.map(n => ({ ...n, unread: false })))} disabled={unread === 0}>Mark all read</button>
         </div>
       }
     >
@@ -70,13 +73,13 @@ export default function NotificationsScreen() {
           {today.length > 0 && (
             <>
               <div className="label" style={{ marginBottom: 12 }}>Today</div>
-              {today.map(n => <NotifRow key={n.id} n={n} />)}
+              {today.map(n => <NotifRow key={n.id} n={n} onOpen={() => setItems(list => list.map(item => item.id === n.id ? { ...item, unread: false } : item))} />)}
             </>
           )}
           {yest.length > 0 && (
             <>
               <div className="label" style={{ marginTop: 24, marginBottom: 12 }}>Yesterday</div>
-              {yest.map(n => <NotifRow key={n.id} n={n} />)}
+              {yest.map(n => <NotifRow key={n.id} n={n} onOpen={() => setItems(list => list.map(item => item.id === n.id ? { ...item, unread: false } : item))} />)}
             </>
           )}
           {shown.length === 0 && (
@@ -91,10 +94,10 @@ export default function NotificationsScreen() {
   );
 }
 
-function NotifRow({ n }) {
+function NotifRow({ n, onOpen }) {
   return (
-    <div style={{
-      display: 'flex', alignItems: 'flex-start', gap: 14,
+    <button type="button" onClick={onOpen} style={{
+      width: '100%', textAlign: 'left', display: 'flex', alignItems: 'flex-start', gap: 14,
       padding: '14px 16px', marginBottom: 6,
       background: n.unread ? 'var(--card)' : 'transparent',
       border: n.unread ? '1px solid var(--line)' : '1px solid transparent',
@@ -118,6 +121,6 @@ function NotifRow({ n }) {
       {n.unread && (
         <div style={{ width: 8, height: 8, borderRadius: '50%', background: n.color, marginTop: 4 }} />
       )}
-    </div>
+    </button>
   );
 }
