@@ -1,0 +1,41 @@
+{
+  "name": "LinkUpBookings",
+  "short_name": "LinkUp",
+  "description": "Mobile-first booking, payments, reminders, and client management for solo service pros.",
+  "start_url": "/linkupbookings/",
+  "scope": "/linkupbookings/",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "browser"],
+  "orientation": "portrait-primary",
+  "theme_color": "#0c4a2d",
+  "background_color": "#fbf6ec",
+  "categories": ["business", "productivity", "finance"],
+  "icons": [
+    {
+      "src": "/linkupbookings/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/linkupbookings/icons/maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Today’s calendar",
+      "short_name": "Calendar",
+      "url": "/linkupbookings/calendar",
+      "description": "Open today’s bookings"
+    },
+    {
+      "name": "Messages",
+      "short_name": "Messages",
+      "url": "/linkupbookings/inbox",
+      "description": "Open client messages"
+    }
+  ]
+}

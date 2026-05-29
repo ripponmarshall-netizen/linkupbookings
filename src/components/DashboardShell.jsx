@@ -22,6 +22,8 @@ const BOTTOM_NAV = [
   { key: 'more',     label: 'More',     icon: Icon.menu },
 ];
 
+const MORE_KEYS = new Set(['reminders', 'analytics', 'services', 'settings', 'notifications', 'waitlist', 'referral']);
+
 export default function DashboardShell({ title, sub, action, children, rightPanel }) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
@@ -145,6 +147,9 @@ export default function DashboardShell({ title, sub, action, children, rightPane
           {/* Hamburger (mobile only) */}
           <button
             className="show-mobile"
+            type="button"
+            aria-label="Open navigation menu"
+            aria-expanded={drawerOpen}
             onClick={() => setDrawerOpen(true)}
             style={{ color: 'var(--ink)', padding: 4 }}
           >
@@ -164,6 +169,7 @@ export default function DashboardShell({ title, sub, action, children, rightPane
           }}>
             {Icon.search({ width: 14, height: 14, style: { color: 'var(--muted)' } })}
             <input
+              aria-label="Search bookings"
               placeholder="Search…"
               style={{ background: 'none', border: 'none', outline: 'none', fontSize: 13, width: '100%', color: 'var(--ink)' }}
             />
@@ -189,11 +195,14 @@ export default function DashboardShell({ title, sub, action, children, rightPane
       <nav className="bottom-nav no-select">
         <div className="bottom-nav-items">
           {BOTTOM_NAV.map(item => {
-            const isActive = item.key !== 'more' && active === item.key;
+            const isActive = item.key === 'more' ? moreOpen || MORE_KEYS.has(active) : active === item.key;
             return (
               <button
                 key={item.key}
                 className={`bottom-nav-item ${isActive ? 'active' : ''}`}
+                type="button"
+                aria-label={item.key === 'more' ? 'Open more navigation' : `Go to ${item.label}`}
+                aria-expanded={item.key === 'more' ? moreOpen : undefined}
                 onClick={() => item.key === 'more' ? setMoreOpen(o => !o) : go(item.key)}
               >
                 {item.icon({ width: 20, height: 20 })}

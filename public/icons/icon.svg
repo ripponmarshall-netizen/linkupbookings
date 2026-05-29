@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">LinkUpBookings app icon</title>
+  <desc id="desc">A cream booking card over a deep green background with terracotta accent.</desc>
+  <rect width="512" height="512" rx="112" fill="#0c4a2d"/>
+  <path fill="#fbf6ec" d="M144 136h224c17.7 0 32 14.3 32 32v176c0 17.7-14.3 32-32 32H144c-17.7 0-32-14.3-32-32V168c0-17.7 14.3-32 32-32Z"/>
+  <path fill="#c4663d" d="M112 204h288v52H112z"/>
+  <circle cx="180" cy="308" r="26" fill="#0c4a2d"/>
+  <circle cx="256" cy="308" r="26" fill="#0c4a2d" opacity=".82"/>
+  <circle cx="332" cy="308" r="26" fill="#0c4a2d" opacity=".64"/>
+  <path stroke="#fbf6ec" stroke-width="28" stroke-linecap="round" d="M184 116v60M328 116v60"/>
+</svg>

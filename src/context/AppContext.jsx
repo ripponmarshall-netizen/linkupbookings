@@ -25,15 +25,19 @@ function save(state) {
   } catch {}
 }
 
+function defaults() {
+  return {
+    appts:    APPTS,
+    clients:  CLIENTS,
+    services: SERVICES,
+    blocks:   BLOCKS,
+    isPro:    false,
+  };
+}
+
 function init() {
   const saved = load();
-  return {
-    appts:    saved?.appts    ?? APPTS,
-    clients:  saved?.clients  ?? CLIENTS,
-    services: saved?.services ?? SERVICES,
-    blocks:   saved?.blocks   ?? BLOCKS,
-    isPro:    saved?.isPro    ?? false,
-  };
+  return saved ? { ...defaults(), ...saved } : defaults();
 }
 
 function reducer(state, action) {
@@ -74,7 +78,7 @@ function reducer(state, action) {
       };
 
     case 'RESET':
-      return init();
+      return defaults();
 
     default:
       return state;
