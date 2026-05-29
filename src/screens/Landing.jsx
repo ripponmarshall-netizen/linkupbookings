@@ -5,6 +5,7 @@ export default function LandingScreen() {
   const navigate = useNavigate();
   const goCta = () => navigate('/onboarding');
   const goSignIn = () => navigate('/calendar');
+  const scrollTo = (id) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
   return (
     <div className="page-scroll" style={{ background: 'var(--paper)', color: 'var(--ink)' }}>
@@ -12,10 +13,10 @@ export default function LandingScreen() {
       <div style={{ justifyContent: 'space-between' }} className="landing-nav app-bar">
         <Logo size={18} />
         <div style={{ display: 'flex', gap: 32, fontSize: 13.5, color: 'var(--ink-2)' }} className="landing-nav-links">
-          <a style={{ cursor: 'pointer' }}>Features</a>
-          <a style={{ cursor: 'pointer' }}>Pricing</a>
-          <a style={{ cursor: 'pointer' }}>For solo pros</a>
-          <a style={{ cursor: 'pointer' }}>Help</a>
+          <a style={{ cursor: 'pointer' }} onClick={() => scrollTo('features')}>Features</a>
+          <a style={{ cursor: 'pointer' }} onClick={() => scrollTo('pricing')}>Pricing</a>
+          <a style={{ cursor: 'pointer' }} onClick={() => scrollTo('features')}>For solo pros</a>
+          <a style={{ cursor: 'pointer' }} onClick={goCta}>Help</a>
         </div>
         <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
           <button className="btn btn-ghost btn-sm" onClick={goSignIn}>Sign in</button>
@@ -79,7 +80,7 @@ export default function LandingScreen() {
       </div>
 
       {/* features */}
-      <div style={{ padding: '96px 56px', maxWidth: 1280, margin: '0 auto' }} className="landing-section">
+      <div id="features" style={{ padding: '96px 56px', maxWidth: 1280, margin: '0 auto' }} className="landing-section">
         <div style={{ maxWidth: 620, marginBottom: 56 }}>
           <div className="label" style={{ marginBottom: 16 }}>What you get</div>
           <h2 className="serif" style={{ fontSize: 'clamp(36px, 5vw, 56px)', margin: 0, lineHeight: 1.02, letterSpacing: '-0.015em', fontWeight: 400 }}>
@@ -112,7 +113,7 @@ export default function LandingScreen() {
       </div>
 
       {/* pricing */}
-      <div style={{ background: 'var(--paper-2)', borderTop: '1px solid var(--line)', borderBottom: '1px solid var(--line)' }}>
+      <div id="pricing" style={{ background: 'var(--paper-2)', borderTop: '1px solid var(--line)', borderBottom: '1px solid var(--line)' }}>
         <div style={{ padding: '96px 56px', maxWidth: 1280, margin: '0 auto' }} className="landing-section">
           <div style={{ textAlign: 'center', marginBottom: 48 }}>
             <div className="label" style={{ marginBottom: 16 }}>Pricing</div>
@@ -235,11 +236,18 @@ function PricingTable({ onCta }) {
   };
 
   return (
-    <div style={{
-      maxWidth: 920, margin: '0 auto',
-      background: 'var(--card)', borderRadius: 18, overflow: 'hidden',
-      border: '1px solid var(--line)', boxShadow: 'var(--shadow-md)',
-    }}>
+    <div style={{ position: 'relative', maxWidth: 920, margin: '0 auto' }}>
+      {/* Badge lives on the (non-clipping) wrapper so it isn't cut off by the card's overflow:hidden */}
+      <div style={{
+        position: 'absolute', top: -12, right: 16, zIndex: 1,
+        background: 'var(--terracotta)', color: '#fbf6ec',
+        padding: '4px 10px', borderRadius: 999,
+        fontSize: 10, fontFamily: 'var(--mono)', letterSpacing: '0.08em',
+      }}>MOST POPULAR</div>
+      <div style={{
+        background: 'var(--card)', borderRadius: 18, overflow: 'hidden',
+        border: '1px solid var(--line)', boxShadow: 'var(--shadow-md)',
+      }}>
       <div className="pricing-grid" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', borderBottom: '1px solid var(--line)' }}>
         <div style={{ padding: '28px 24px' }}>
           <div className="label">Compare</div>
@@ -254,12 +262,6 @@ function PricingTable({ onCta }) {
           padding: '24px 20px', borderLeft: '1px solid var(--line)', textAlign: 'center',
           background: 'var(--ink)', color: '#fbf6ec', position: 'relative',
         }}>
-          <div style={{
-            position: 'absolute', top: -12, right: 16,
-            background: 'var(--terracotta)', color: '#fbf6ec',
-            padding: '4px 10px', borderRadius: 999,
-            fontSize: 10, fontFamily: 'var(--mono)', letterSpacing: '0.08em',
-          }}>MOST POPULAR</div>
           <div className="serif" style={{ fontSize: 22, marginBottom: 2, fontStyle: 'italic' }}>Pro</div>
           <div className="serif" style={{ fontSize: 42, lineHeight: 1, fontWeight: 400 }}>
             J$400<span style={{ fontSize: 13, color: '#a89c87' }}>/mo</span>
@@ -280,6 +282,7 @@ function PricingTable({ onCta }) {
           <div style={{ padding: '14px 20px', borderLeft: '1px solid var(--line)', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(196,102,61,0.04)' }}>{cell(pro)}</div>
         </div>
       ))}
+      </div>
     </div>
   );
 }

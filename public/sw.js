@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'linkupbookings-v2';
+const CACHE_VERSION = 'linkupbookings-v3';
 const BASE_PATH = '/linkupbookings/';
 const INDEX_URL = `${BASE_PATH}index.html`;
 const APP_SHELL = [
@@ -58,11 +58,16 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          const copy = response.clone();
-          caches.open(CACHE_VERSION).then((cache) => {
-            cache.put(INDEX_URL, copy.clone());
-            cache.put(BASE_PATH, copy);
-          });
+          // Only cache real index responses. A non-OK response here (e.g. the
+          // GitHub Pages 404.html SPA fallback) must still be returned so its
+          // redirect can run, but caching it would poison the app shell.
+          if (response.ok) {
+            const copy = response.clone();
+            caches.open(CACHE_VERSION).then((cache) => {
+              cache.put(INDEX_URL, copy.clone());
+              cache.put(BASE_PATH, copy);
+            });
+          }
           return response;
         })
         .catch(() => caches.match(INDEX_URL).then((cached) => cached || caches.match(BASE_PATH)))
