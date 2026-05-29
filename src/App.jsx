@@ -16,9 +16,11 @@ import WaitlistScreen from './screens/Waitlist.jsx';
 import DayEndScreen from './screens/DayEnd.jsx';
 import ReferralScreen from './screens/Referral.jsx';
 
+const basename = (import.meta.env.BASE_URL || '/').replace(/\/$/, '');
+
 export default function App() {
   return (
-    <BrowserRouter basename="/linkupbookings">
+    <BrowserRouter basename={basename || undefined}>
       <AppProvider>
         <Routes>
           <Route path="/" element={<LandingScreen />} />

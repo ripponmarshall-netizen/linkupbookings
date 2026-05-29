@@ -22,7 +22,18 @@ const BOTTOM_NAV = [
   { key: 'more',     label: 'More',     icon: Icon.menu },
 ];
 
-const MORE_KEYS = new Set(['reminders', 'analytics', 'services', 'settings', 'notifications', 'waitlist', 'referral']);
+const MORE_NAV_ITEMS = [
+  { key: 'reminders',     label: 'Reminders',     icon: Icon.bell },
+  { key: 'analytics',     label: 'Analytics',     icon: Icon.chart },
+  { key: 'services',      label: 'Services',      icon: Icon.sparkle },
+  { key: 'settings',      label: 'Settings',      icon: Icon.settings },
+  { key: 'notifications', label: 'Notifications', icon: Icon.bell },
+  { key: 'waitlist',      label: 'Waitlist',      icon: Icon.clock },
+  { key: 'referral',      label: 'Refer & Earn',  icon: Icon.sparkle },
+];
+
+const SECONDARY_NAV_ITEMS = MORE_NAV_ITEMS.slice(4);
+const MORE_KEYS = new Set(MORE_NAV_ITEMS.map(item => item.key));
 
 export default function DashboardShell({ title, sub, action, children, rightPanel }) {
   const navigate = useNavigate();
@@ -31,7 +42,7 @@ export default function DashboardShell({ title, sub, action, children, rightPane
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
 
-  const active = pathname.split('/')[1] || 'calendar';
+  const active = pathname.replace(/^\/linkupbookings(?=\/|$)/, '').split('/')[1] || 'calendar';
 
   // Close transient menus on route change (covers back/forward navigation too)
   useEffect(() => {
@@ -67,6 +78,7 @@ export default function DashboardShell({ title, sub, action, children, rightPane
         </div>
         {/* Pro/Free toggle */}
         <button
+          type="button"
           onClick={togglePro}
           style={{
             marginTop: 10, width: '100%',
@@ -89,6 +101,8 @@ export default function DashboardShell({ title, sub, action, children, rightPane
             <button
               key={item.key}
               className="sidebar-nav-item"
+              type="button"
+              aria-current={isActive ? 'page' : undefined}
               onClick={() => go(item.key)}
               style={{
                 width: 'calc(100% - 16px)', display: 'flex', alignItems: 'center', gap: 10,
@@ -108,24 +122,27 @@ export default function DashboardShell({ title, sub, action, children, rightPane
 
       {/* More links */}
       <div style={{ padding: '8px 8px 20px', borderTop: '1px solid var(--line)' }}>
-        {[
-          { key: 'notifications', label: 'Notifications', icon: Icon.bell },
-          { key: 'waitlist',      label: 'Waitlist',       icon: Icon.clock },
-          { key: 'referral',      label: 'Refer & Earn',   icon: Icon.sparkle },
-        ].map(item => (
-          <button
-            key={item.key}
-            onClick={() => go(item.key)}
-            style={{
-              width: '100%', display: 'flex', alignItems: 'center', gap: 10,
-              padding: '9px 8px', borderRadius: 8, color: 'var(--muted)',
-              fontSize: 12.5, transition: 'color 120ms',
-            }}
-          >
-            {item.icon({ width: 14, height: 14 })}
-            <span className="sidebar-label">{item.label}</span>
-          </button>
-        ))}
+        {SECONDARY_NAV_ITEMS.map(item => {
+          const isActive = active === item.key;
+          return (
+            <button
+              key={item.key}
+              type="button"
+              aria-current={isActive ? 'page' : undefined}
+              onClick={() => go(item.key)}
+              style={{
+                width: '100%', display: 'flex', alignItems: 'center', gap: 10,
+                padding: '9px 8px', borderRadius: 8,
+                color: isActive ? 'var(--forest)' : 'var(--muted)',
+                background: isActive ? 'var(--forest-soft)' : 'transparent',
+                fontSize: 12.5, transition: 'color 120ms, background 120ms',
+              }}
+            >
+              {item.icon({ width: 14, height: 14 })}
+              <span className="sidebar-label">{item.label}</span>
+            </button>
+          );
+        })}
       </div>
     </>
   );
@@ -209,6 +226,8 @@ export default function DashboardShell({ title, sub, action, children, rightPane
                 type="button"
                 aria-label={item.key === 'more' ? 'Open more navigation' : `Go to ${item.label}`}
                 aria-expanded={item.key === 'more' ? moreOpen : undefined}
+                aria-controls={item.key === 'more' ? 'mobile-more-nav' : undefined}
+                aria-current={isActive && item.key !== 'more' ? 'page' : undefined}
                 onClick={() => item.key === 'more' ? setMoreOpen(o => !o) : go(item.key)}
               >
                 {item.icon({ width: 20, height: 20 })}
@@ -223,32 +242,22 @@ export default function DashboardShell({ title, sub, action, children, rightPane
           <div className="more-overlay" onClick={() => setMoreOpen(false)} />
         )}
         {moreOpen && (
-          <div style={{
-            position: 'fixed', bottom: 'var(--bottom-nav-h)', left: 0, right: 0,
-            background: 'var(--card)', borderTop: '1px solid var(--line)',
-            padding: '12px 0', zIndex: 101,
-          }}>
-            {[
-              { key: 'reminders',     label: 'Reminders',   icon: Icon.bell },
-              { key: 'analytics',     label: 'Analytics',   icon: Icon.chart },
-              { key: 'services',      label: 'Services',    icon: Icon.sparkle },
-              { key: 'settings',      label: 'Settings',    icon: Icon.settings },
-              { key: 'notifications', label: 'Notifications', icon: Icon.bell },
-              { key: 'waitlist',      label: 'Waitlist',    icon: Icon.clock },
-              { key: 'referral',      label: 'Refer & Earn',icon: Icon.sparkle },
-            ].map(item => (
-              <button
-                key={item.key}
-                onClick={() => go(item.key)}
-                style={{
-                  width: '100%', display: 'flex', alignItems: 'center', gap: 14,
-                  padding: '12px 20px', fontSize: 14, color: 'var(--ink)',
-                }}
-              >
-                {item.icon({ width: 18, height: 18 })}
-                {item.label}
-              </button>
-            ))}
+          <div className="more-sheet" id="mobile-more-nav" role="dialog" aria-label="More navigation">
+            {MORE_NAV_ITEMS.map(item => {
+              const isActive = active === item.key;
+              return (
+                <button
+                  key={item.key}
+                  className={`more-sheet-item ${isActive ? 'active' : ''}`}
+                  type="button"
+                  aria-current={isActive ? 'page' : undefined}
+                  onClick={() => go(item.key)}
+                >
+                  {item.icon({ width: 18, height: 18 })}
+                  {item.label}
+                </button>
+              );
+            })}
           </div>
         )}
       </nav>

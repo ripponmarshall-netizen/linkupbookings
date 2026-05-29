@@ -9,10 +9,12 @@ createRoot(document.getElementById('root')).render(
   </StrictMode>
 );
 
-if ('serviceWorker' in navigator) {
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     const baseUrl = import.meta.env.BASE_URL || '/';
-    navigator.serviceWorker.register(`${baseUrl}sw.js`, { scope: baseUrl })
+    const swUrl = new URL(`${baseUrl}sw.js`, window.location.origin);
+
+    navigator.serviceWorker.register(swUrl.href, { scope: baseUrl })
       .catch((error) => {
         console.warn('Service worker registration failed', error);
       });
