@@ -25,6 +25,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<LandingScreen />} />
           <Route path="/onboarding" element={<OnboardingScreen />} />
+          <Route path="/dashboard" element={<Navigate to="/calendar" replace />} />
           <Route path="/calendar" element={<CalendarScreen />} />
           <Route path="/inbox" element={<InboxScreen />} />
           <Route path="/money" element={<MoneyScreen />} />

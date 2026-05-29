@@ -1,5 +1,5 @@
 // Onboarding wizard — the first 90 seconds of a new account
-function Onboarding() {
+function Onboarding({ onDone }) {
   const [step, setStep] = React.useState(0);
   const steps = ['Welcome', 'Your business', 'Services', 'Hours', 'Your link'];
 
@@ -34,7 +34,7 @@ function Onboarding() {
             </React.Fragment>
           ))}
         </div>
-        <button className="btn btn-ghost btn-sm">Skip for now</button>
+        <button className="btn btn-ghost btn-sm" onClick={onDone}>Skip for now</button>
       </div>
 
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 56px' }}>
@@ -43,7 +43,7 @@ function Onboarding() {
           {step === 1 && <OBBusiness onNext={() => setStep(2)} />}
           {step === 2 && <OBServices onNext={() => setStep(3)} />}
           {step === 3 && <OBHours onNext={() => setStep(4)} />}
-          {step === 4 && <OBLink />}
+          {step === 4 && <OBLink onDone={onDone} />}
         </div>
       </div>
 
@@ -259,7 +259,7 @@ function OBHours({ onNext }) {
   );
 }
 
-function OBLink() {
+function OBLink({ onDone }) {
   return (
     <div style={{ textAlign: 'center' }}>
       <div className="chip chip-forest" style={{ marginBottom: 20, fontSize: 11 }}>
@@ -304,7 +304,7 @@ function OBLink() {
         ))}
       </div>
 
-      <button className="btn btn-primary btn-lg" style={{ minWidth: 220 }}>
+      <button className="btn btn-primary btn-lg" style={{ minWidth: 220 }} onClick={onDone}>
         Take me to my dashboard {Icon.arrow({ width: 14, height: 14 })}
       </button>
     </div>

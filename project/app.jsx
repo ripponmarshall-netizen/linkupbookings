@@ -82,7 +82,7 @@ function App() {
   if (screen === 'landing') {
     body = <Landing onCta={() => setScreen('onboarding')} onSignIn={() => setScreen('calendar')} />;
   } else if (screen === 'onboarding') {
-    body = <Onboarding />;
+    body = <Onboarding onDone={() => goto('calendar')} />;
   } else if (screen === 'mobile') {
     body = <MobileOwner />;
   } else if (screen === 'public') {
