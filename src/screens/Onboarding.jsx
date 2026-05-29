@@ -29,7 +29,7 @@ export default function OnboardingScreen() {
             </div>
           ))}
         </div>
-        <button className="btn btn-ghost btn-sm" onClick={() => navigate('/calendar')}>Skip for now</button>
+        <button type="button" className="btn btn-ghost btn-sm" onClick={() => navigate('/dashboard')}>Skip for now</button>
       </div>
 
       <div className="ob-body" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 24px' }}>
@@ -38,7 +38,7 @@ export default function OnboardingScreen() {
           {step === 1 && <OBBusiness onNext={() => setStep(2)} />}
           {step === 2 && <OBServices onNext={() => setStep(3)} />}
           {step === 3 && <OBHours onNext={() => setStep(4)} />}
-          {step === 4 && <OBLink onDone={() => navigate('/calendar')} />}
+          {step === 4 && <OBLink onDone={() => navigate('/dashboard')} />}
         </div>
       </div>
 
@@ -247,6 +247,29 @@ function OBHours() {
 }
 
 function OBLink({ onDone }) {
+  const bookingUrl = 'https://book.linkupbookings.com/glow';
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(bookingUrl);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1800);
+    } catch {
+      const textArea = document.createElement('textarea');
+      textArea.value = bookingUrl;
+      textArea.setAttribute('readonly', '');
+      textArea.style.position = 'fixed';
+      textArea.style.opacity = '0';
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1800);
+    }
+  };
+
   return (
     <div style={{ textAlign: 'center' }}>
       <div className="chip chip-forest" style={{ marginBottom: 20, fontSize: 11 }}>
@@ -269,8 +292,8 @@ function OBLink({ onDone }) {
           <span style={{ color: 'var(--muted)' }}>book.linkupbookings.com/</span>
           <span style={{ fontWeight: 600, color: 'var(--ink)' }}>glow</span>
         </div>
-        <button className="btn btn-primary" style={{ padding: '12px 18px' }}>
-          {Icon.copy({ width: 14, height: 14 })} Copy
+        <button type="button" className="btn btn-primary" style={{ padding: '12px 18px' }} onClick={handleCopy}>
+          {Icon.copy({ width: 14, height: 14 })} {copied ? 'Copied' : 'Copy'}
         </button>
       </div>
 
@@ -280,14 +303,14 @@ function OBLink({ onDone }) {
           { l: 'Add to IG bio', i: Icon.globe, c: 'var(--terracotta)' },
           { l: 'Print QR code', i: Icon.sparkle, c: 'var(--ochre)' },
         ].map((s, i) => (
-          <button key={i} className="btn btn-secondary" style={{ padding: '10px 14px' }}>
+          <button key={i} type="button" className="btn btn-secondary" style={{ padding: '10px 14px' }}>
             <span style={{ color: s.c }}>{s.i({ width: 14, height: 14 })}</span>
             <span>{s.l}</span>
           </button>
         ))}
       </div>
 
-      <button className="btn btn-primary btn-lg" style={{ minWidth: 220 }} onClick={onDone}>
+      <button type="button" className="btn btn-primary btn-lg" style={{ minWidth: 220 }} onClick={onDone}>
         Take me to my dashboard {Icon.arrow({ width: 14, height: 14 })}
       </button>
     </div>
