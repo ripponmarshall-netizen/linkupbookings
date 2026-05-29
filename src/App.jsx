@@ -18,7 +18,7 @@ import ReferralScreen from './screens/Referral.jsx';
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/linkupbookings">
       <AppProvider>
         <Routes>
           <Route path="/" element={<LandingScreen />} />
