@@ -8,13 +8,9 @@ export default function OnboardingScreen() {
   const steps = ['Welcome', 'Your business', 'Services', 'Hours', 'Your link'];
 
   return (
-    <div style={{ background: 'var(--paper)', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div className="ob-flow" style={{ background: 'var(--paper)' }}>
       {/* progress bar */}
-      <div className="ob-bar" style={{
-        padding: '20px 56px', borderBottom: '1px solid var(--line)',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        background: 'var(--paper-2)', flexWrap: 'wrap', gap: 12,
-      }}>
+      <div className="ob-bar app-bar" style={{ justifyContent: 'space-between', flexWrap: 'wrap' }}>
         <Logo size={16} />
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
           {steps.map((s, i) => (
@@ -36,7 +32,7 @@ export default function OnboardingScreen() {
         <button className="btn btn-ghost btn-sm" onClick={() => navigate('/calendar')}>Skip for now</button>
       </div>
 
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 24px' }}>
+      <div className="ob-body" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 24px' }}>
         <div style={{ maxWidth: step === 0 || step === 4 ? 760 : 560, width: '100%' }}>
           {step === 0 && <OBWelcome onNext={() => setStep(1)} />}
           {step === 1 && <OBBusiness onNext={() => setStep(2)} />}
@@ -47,10 +43,9 @@ export default function OnboardingScreen() {
       </div>
 
       {step > 0 && step < 4 && (
-        <div className="ob-bar" style={{
-          padding: '20px 56px', borderTop: '1px solid var(--line)',
-          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          background: 'var(--card-warm)',
+        <div className="ob-bar app-bar" style={{
+          borderTop: '1px solid var(--line)', borderBottom: 'none',
+          justifyContent: 'space-between',
         }}>
           <button className="btn btn-ghost btn-sm" onClick={() => setStep(step - 1)}>
             {Icon.chev({ width: 12, height: 12, style: { transform: 'scaleX(-1)' } })} Back
