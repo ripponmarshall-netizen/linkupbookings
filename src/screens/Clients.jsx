@@ -34,7 +34,7 @@ export default function ClientsScreen() {
     >
       <div style={{ display: 'flex', height: '100%', minHeight: 0 }}>
         {/* List panel */}
-        <div style={{
+        <div className={`clients-list-pane${showDetail ? ' detail-open' : ''}`} style={{
           width: showDetail ? 'auto' : '100%',
           minWidth: showDetail ? 0 : 'auto',
           flex: showDetail ? '0 0 320px' : '1',
@@ -90,7 +90,7 @@ export default function ClientsScreen() {
 
         {/* Detail panel */}
         {showDetail && selected && (
-          <div style={{ flex: 1, overflowY: 'auto', background: 'var(--card-warm)', minWidth: 0 }}>
+          <div className="clients-detail-pane" style={{ flex: 1, overflowY: 'auto', background: 'var(--card-warm)', minWidth: 0 }}>
             <ClientDetail
               client={selected}
               appts={appts}

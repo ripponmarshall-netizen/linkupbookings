@@ -10,7 +10,7 @@ export default function OnboardingScreen() {
   return (
     <div style={{ background: 'var(--paper)', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       {/* progress bar */}
-      <div style={{
+      <div className="ob-bar" style={{
         padding: '20px 56px', borderBottom: '1px solid var(--line)',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         background: 'var(--paper-2)', flexWrap: 'wrap', gap: 12,
@@ -47,7 +47,7 @@ export default function OnboardingScreen() {
       </div>
 
       {step > 0 && step < 4 && (
-        <div style={{
+        <div className="ob-bar" style={{
           padding: '20px 56px', borderTop: '1px solid var(--line)',
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
           background: 'var(--card-warm)',
@@ -165,7 +165,7 @@ function OBServices() {
       </p>
       <div style={{ marginBottom: 14 }}>
         {list.map((s, i) => (
-          <div key={i} style={{
+          <div key={i} className="ob-service-row" style={{
             display: 'grid', gridTemplateColumns: '1fr 90px 110px 32px', gap: 10,
             alignItems: 'center', padding: 10, marginBottom: 6,
             background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 10,
@@ -212,7 +212,7 @@ function OBHours() {
       </p>
       <div style={{ background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 12, overflow: 'hidden' }}>
         {Object.entries(hours).map(([d, [from, to, on]], i, arr) => (
-          <div key={d} style={{
+          <div key={d} className="ob-hours-row" style={{
             display: 'grid', gridTemplateColumns: '120px 1fr 120px 120px', gap: 14,
             alignItems: 'center', padding: '14px 18px',
             borderBottom: i < arr.length - 1 ? '1px solid var(--line)' : 'none',
@@ -270,7 +270,7 @@ function OBLink({ onDone }) {
         padding: 6, display: 'flex', alignItems: 'center', gap: 4,
         boxShadow: 'var(--shadow-md)',
       }}>
-        <div style={{ padding: '14px 18px', flex: 1, textAlign: 'left', fontFamily: 'var(--mono)', fontSize: 15 }}>
+        <div style={{ padding: '14px 18px', flex: 1, minWidth: 0, overflowWrap: 'anywhere', textAlign: 'left', fontFamily: 'var(--mono)', fontSize: 15 }}>
           <span style={{ color: 'var(--muted)' }}>book.linkupbookings.com/</span>
           <span style={{ fontWeight: 600, color: 'var(--ink)' }}>glow</span>
         </div>

@@ -26,7 +26,7 @@ export default function MoneyScreen() {
     <>
       <DashboardShell title="Takings" sub="Cash, card, deposits — reconciled" action={action}>
         {/* Tab switcher */}
-        <div style={{
+        <div className="tab-bar" style={{
           padding: '12px 24px', borderBottom: '1px solid var(--line)',
           background: 'var(--card-warm)', display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap',
         }}>
