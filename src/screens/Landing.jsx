@@ -7,12 +7,9 @@ export default function LandingScreen() {
   const goSignIn = () => navigate('/calendar');
 
   return (
-    <div style={{ background: 'var(--paper)', minHeight: '100vh', color: 'var(--ink)' }}>
+    <div className="page-scroll" style={{ background: 'var(--paper)', color: 'var(--ink)' }}>
       {/* nav */}
-      <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '22px 56px', borderBottom: '1px solid var(--line)',
-      }} className="landing-nav">
+      <div style={{ justifyContent: 'space-between' }} className="landing-nav app-bar">
         <Logo size={18} />
         <div style={{ display: 'flex', gap: 32, fontSize: 13.5, color: 'var(--ink-2)' }} className="landing-nav-links">
           <a style={{ cursor: 'pointer' }}>Features</a>

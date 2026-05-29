@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Icon, Logo, Avatar } from './shared.jsx';
 import { useApp } from '../context/AppContext.jsx';
@@ -32,6 +32,12 @@ export default function DashboardShell({ title, sub, action, children, rightPane
   const [moreOpen, setMoreOpen] = useState(false);
 
   const active = pathname.split('/')[1] || 'calendar';
+
+  // Close transient menus on route change (covers back/forward navigation too)
+  useEffect(() => {
+    setDrawerOpen(false);
+    setMoreOpen(false);
+  }, [pathname]);
 
   const go = (key) => {
     navigate('/' + key);
@@ -212,7 +218,10 @@ export default function DashboardShell({ title, sub, action, children, rightPane
           })}
         </div>
 
-        {/* More drawer */}
+        {/* More drawer + backdrop */}
+        {moreOpen && (
+          <div className="more-overlay" onClick={() => setMoreOpen(false)} />
+        )}
         {moreOpen && (
           <div style={{
             position: 'fixed', bottom: 'var(--bottom-nav-h)', left: 0, right: 0,

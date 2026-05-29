@@ -57,10 +57,7 @@ export default function WaitlistScreen() {
       }
     >
       {/* tabs */}
-      <div className="tab-bar" style={{
-        padding: '0 32px', borderBottom: '1px solid var(--line)',
-        display: 'flex', gap: 4, background: 'var(--card-warm)',
-      }}>
+      <div className="tab-bar" style={{ gap: 4, alignItems: 'stretch' }}>
         {[
           ['queue', `Queue · ${WAITLIST.length}`],
           ['rules', 'Auto-fill rules'],

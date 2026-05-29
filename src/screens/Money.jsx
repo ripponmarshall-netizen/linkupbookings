@@ -26,18 +26,15 @@ export default function MoneyScreen() {
     <>
       <DashboardShell title="Takings" sub="Cash, card, deposits — reconciled" action={action}>
         {/* Tab switcher */}
-        <div className="tab-bar" style={{
-          padding: '12px 24px', borderBottom: '1px solid var(--line)',
-          background: 'var(--card-warm)', display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap',
-        }}>
-          <div style={{ display: 'flex', background: 'var(--paper-2)', borderRadius: 8, padding: 2, border: '1px solid var(--line)' }}>
+        <div className="tab-bar" style={{ flexWrap: 'wrap' }}>
+          <div className="seg-toggle">
             {[['today','Today'],['week','This week'],['month','May']].map(([k,l]) => (
-              <button key={k} onClick={() => setTab(k)} style={{
-                padding: '6px 14px', borderRadius: 6,
-                background: tab === k ? 'var(--card)' : 'transparent',
-                color: tab === k ? 'var(--ink)' : 'var(--muted)',
-                fontSize: 12.5, fontWeight: 500,
-              }}>{l}</button>
+              <button
+                key={k}
+                className={`seg-toggle-item ${tab === k ? 'active' : ''}`}
+                style={{ textTransform: 'none' }}
+                onClick={() => setTab(k)}
+              >{l}</button>
             ))}
           </div>
           <div className="mono" style={{ fontSize: 11, color: 'var(--muted)' }}>TUE · 26 MAY · UPDATED 11:42 AM</div>

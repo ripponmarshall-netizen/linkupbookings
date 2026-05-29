@@ -49,20 +49,17 @@ export default function CalendarScreen() {
         rightPanel={<TodayPanel appts={appts} onAppt={openAppt} onFillSlot={() => setModal('fillslot')} />}
       >
         {/* View toggle (desktop) */}
-        <div className="hide-mobile" style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '12px 24px', borderBottom: '1px solid var(--line)',
-          background: 'var(--card-warm)',
-        }}>
-          <div className="serif" style={{ fontSize: 20 }}>{MONTH} <span style={{ color: 'var(--muted)' }}>· week 22</span></div>
-          <div style={{ display: 'flex', background: 'var(--paper-2)', borderRadius: 8, padding: 2, border: '1px solid var(--line)' }}>
+        <div className="hide-mobile subbar" style={{ justifyContent: 'space-between' }}>
+          <div className="serif" style={{ fontSize: 20 }}>
+            {view === 'day' ? `${DAYS[dayIdx]} ${DAY_DATES[dayIdx]}` : MONTH} <span style={{ color: 'var(--muted)' }}>· week 22</span>
+          </div>
+          <div className="seg-toggle">
             {['day', 'week'].map(v => (
-              <button key={v} onClick={() => setView(v)} style={{
-                padding: '5px 14px', borderRadius: 6, fontSize: 12, fontWeight: 500,
-                background: view === v ? 'var(--card)' : 'transparent',
-                color: view === v ? 'var(--ink)' : 'var(--muted)',
-                textTransform: 'capitalize',
-              }}>{v}</button>
+              <button
+                key={v}
+                className={`seg-toggle-item ${view === v ? 'active' : ''}`}
+                onClick={() => setView(v)}
+              >{v}</button>
             ))}
           </div>
         </div>
@@ -92,7 +89,7 @@ export default function CalendarScreen() {
         </div>
 
         {/* Week grid (desktop) */}
-        <div className="cal-week-grid" style={{ flex: 1, overflow: 'auto' }}>
+        <div className={`cal-week-grid ${view === 'day' ? 'cal-hide-desktop' : ''}`} style={{ flex: 1, overflow: 'auto' }}>
           {/* Day header */}
           <div style={{
             display: 'grid', gridTemplateColumns: '52px repeat(7, 1fr)',
@@ -132,6 +129,40 @@ export default function CalendarScreen() {
             {DAYS.map((d, di) => (
               <DayColumn key={di} di={di} appts={appts} blocks={blocks} onAppt={openAppt} />
             ))}
+          </div>
+        </div>
+
+        {/* Single-day view (desktop) */}
+        <div className={`hide-mobile ${view === 'week' ? 'cal-hide-desktop' : ''}`} style={{ flex: 1, overflow: 'auto' }}>
+          {/* Day header */}
+          <div style={{
+            display: 'grid', gridTemplateColumns: '52px 1fr',
+            borderBottom: '1px solid var(--line)', background: 'var(--card-warm)',
+            position: 'sticky', top: 0, zIndex: 2,
+          }}>
+            <div />
+            <div style={{ padding: '10px 14px 8px', borderLeft: '1px solid var(--line)' }}>
+              <div style={{ fontSize: 10, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{DAYS[dayIdx]}</div>
+              <div className="serif" style={{
+                fontSize: 20, lineHeight: 1, marginTop: 2,
+                color: dayIdx === TODAY_IDX ? 'var(--terracotta)' : 'var(--ink)',
+                fontStyle: dayIdx === TODAY_IDX ? 'italic' : 'normal',
+              }}>{DAY_DATES[dayIdx]}</div>
+            </div>
+          </div>
+
+          {/* Grid body */}
+          <div style={{ display: 'grid', gridTemplateColumns: '52px 1fr', position: 'relative' }}>
+            <div>
+              {HOURS.map(h => (
+                <div key={h} style={{ height: H, position: 'relative' }}>
+                  <span className="mono" style={{ position: 'absolute', top: -7, right: 6, fontSize: 10, color: 'var(--muted)' }}>
+                    {fmtTime(h)}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <DayColumn di={dayIdx} appts={appts} blocks={blocks} onAppt={openAppt} />
           </div>
         </div>
 
