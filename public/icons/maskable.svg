@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">LinkUpBookings maskable app icon</title>
+  <desc id="desc">Centered LinkUpBookings booking mark with extra safe-area padding.</desc>
+  <rect width="512" height="512" fill="#0c4a2d"/>
+  <circle cx="256" cy="256" r="204" fill="#fbf6ec"/>
+  <path fill="#0c4a2d" d="M168 172h176c15.5 0 28 12.5 28 28v132c0 15.5-12.5 28-28 28H168c-15.5 0-28-12.5-28-28V200c0-15.5 12.5-28 28-28Z"/>
+  <path fill="#c4663d" d="M140 224h232v46H140z"/>
+  <circle cx="204" cy="310" r="18" fill="#fbf6ec"/>
+  <circle cx="256" cy="310" r="18" fill="#fbf6ec" opacity=".9"/>
+  <circle cx="308" cy="310" r="18" fill="#fbf6ec" opacity=".8"/>
+</svg>
