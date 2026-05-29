@@ -2,15 +2,15 @@ import { useState } from 'react';
 import ModalShell from '../components/ModalShell.jsx';
 import { Icon, Avatar } from '../components/shared.jsx';
 import { useApp } from '../context/AppContext.jsx';
-import { findClient, findService, fmtTime, fmtJ } from '../data/seed.js';
+import { fmtTime, fmtJ } from '../data/seed.js';
 
 export default function MarkPaidModal({ appt, onClose }) {
-  const { markPaid } = useApp();
+  const { markPaid, clients, services } = useApp();
 
   const a = appt || { id: null, clientId: 'c3', serviceId: 's3', deposit: 1500, start: 11 };
-  const c = findClient(a.clientId);
-  const s = findService(a.serviceId);
-  const balance = s.price - (a.deposit || 0);
+  const c = clients.find(client => client.id === a.clientId) || {};
+  const s = services.find(service => service.id === a.serviceId) || {};
+  const balance = (s.price || 0) - (a.deposit || 0);
 
   const [method, setMethod] = useState('cash');
   const [tip, setTip] = useState(0);

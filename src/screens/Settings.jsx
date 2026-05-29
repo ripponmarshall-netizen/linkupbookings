@@ -161,6 +161,8 @@ function HoursSection() {
 }
 
 function PaymentsSection({ isPro }) {
+  const [prefs, setPrefs] = useState({ deposit: isPro, cards: isPro, bank: true });
+  const toggle = (key, value) => setPrefs(p => ({ ...p, [key]: value }));
   return (
     <div>
       <SectionHeader title="Payments & deposits" sub="How yuh collect money." />
@@ -171,9 +173,9 @@ function PaymentsSection({ isPro }) {
           </div>
         </div>
       )}
-      <ToggleRow label="Require deposit on booking" sub="25% upfront via WhatsApp link" on={isPro} onChange={() => {}} />
-      <ToggleRow label="Accept card payments" sub="Lynk, NCB, Visa" on={isPro} onChange={() => {}} />
-      <ToggleRow label="Accept bank transfer" sub="Show account details on receipt" on={true} onChange={() => {}} />
+      <ToggleRow label="Require deposit on booking" sub="25% upfront via WhatsApp link" on={prefs.deposit} onChange={v => toggle('deposit', isPro ? v : false)} />
+      <ToggleRow label="Accept card payments" sub="Lynk, NCB, Visa" on={prefs.cards} onChange={v => toggle('cards', isPro ? v : false)} />
+      <ToggleRow label="Accept bank transfer" sub="Show account details on receipt" on={prefs.bank} onChange={v => toggle('bank', v)} />
       <div style={{ marginTop: 20 }}>
         <FormRow label="Cash instructions">
           <textarea className="textarea" rows={2} defaultValue="Pay on arrival. Exact change appreciated." style={{ resize: 'none' }} />
@@ -185,6 +187,8 @@ function PaymentsSection({ isPro }) {
 }
 
 function BookingSection({ isPro }) {
+  const [prefs, setPrefs] = useState({ showPrice: true, showReviews: isPro });
+  const toggle = (key, value) => setPrefs(p => ({ ...p, [key]: value }));
   return (
     <div>
       <SectionHeader title="Booking page" sub="How yuh page looks to clients." />
@@ -202,23 +206,25 @@ function BookingSection({ isPro }) {
       <FormRow label="Hero message">
         <textarea className="textarea" rows={2} defaultValue="Honest nails, nuh wait, nuh stress." style={{ resize: 'none' }} />
       </FormRow>
-      <ToggleRow label="Show price on booking page" sub="Visible to clients before they book" on={true} onChange={() => {}} />
-      <ToggleRow label="Show reviews on booking page" sub="Auto-pulled from Google & WhatsApp" on={isPro} onChange={() => {}} />
+      <ToggleRow label="Show price on booking page" sub="Visible to clients before they book" on={prefs.showPrice} onChange={v => toggle('showPrice', v)} />
+      <ToggleRow label="Show reviews on booking page" sub="Auto-pulled from Google & WhatsApp" on={prefs.showReviews} onChange={v => toggle('showReviews', isPro ? v : false)} />
       <button className="btn btn-primary" style={{ marginTop: 16 }}>Save</button>
     </div>
   );
 }
 
 function NotifsSection() {
+  const [prefs, setPrefs] = useState({ booking: true, cancelled: true, deposit: true, message: true, summary: true, report: false });
+  const toggle = (key, value) => setPrefs(p => ({ ...p, [key]: value }));
   return (
     <div>
       <SectionHeader title="Notifications" sub="When yuh get pinged." />
-      <ToggleRow label="New booking" sub="Push + WhatsApp" on={true} onChange={() => {}} />
-      <ToggleRow label="Booking cancelled" sub="Push only" on={true} onChange={() => {}} />
-      <ToggleRow label="Deposit received" sub="Push + WhatsApp" on={true} onChange={() => {}} />
-      <ToggleRow label="Client message" sub="Push only" on={true} onChange={() => {}} />
-      <ToggleRow label="Day summary at 8pm" sub="WhatsApp summary of the day" on={true} onChange={() => {}} />
-      <ToggleRow label="Weekly report on Sunday" sub="Revenue, busiest day, top client" on={false} onChange={() => {}} />
+      <ToggleRow label="New booking" sub="Push + WhatsApp" on={prefs.booking} onChange={v => toggle('booking', v)} />
+      <ToggleRow label="Booking cancelled" sub="Push only" on={prefs.cancelled} onChange={v => toggle('cancelled', v)} />
+      <ToggleRow label="Deposit received" sub="Push + WhatsApp" on={prefs.deposit} onChange={v => toggle('deposit', v)} />
+      <ToggleRow label="Client message" sub="Push only" on={prefs.message} onChange={v => toggle('message', v)} />
+      <ToggleRow label="Day summary at 8pm" sub="WhatsApp summary of the day" on={prefs.summary} onChange={v => toggle('summary', v)} />
+      <ToggleRow label="Weekly report on Sunday" sub="Revenue, busiest day, top client" on={prefs.report} onChange={v => toggle('report', v)} />
     </div>
   );
 }

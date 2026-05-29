@@ -2,10 +2,10 @@ import { useState } from 'react';
 import DashboardShell from '../components/DashboardShell.jsx';
 import { Icon, Avatar } from '../components/shared.jsx';
 import { useApp } from '../context/AppContext.jsx';
-import { findService, fmtJ, fmtTime, APPTS } from '../data/seed.js';
+import { fmtJ, fmtTime } from '../data/seed.js';
 
 export default function ClientsScreen() {
-  const { clients, appts, isPro } = useApp();
+  const { clients, appts, services, isPro, addClient } = useApp();
   const [selected, setSelected] = useState(clients[0]);
   const [filter, setFilter] = useState('All');
   const [showDetail, setShowDetail] = useState(false);
@@ -20,8 +20,25 @@ export default function ClientsScreen() {
     setShowDetail(true);
   };
 
+  const handleAddClient = () => {
+    const next = {
+      id: 'c' + Date.now(),
+      name: 'New Client',
+      phone: '+1 876 555 0199',
+      email: '',
+      visits: 0,
+      lifetime: 0,
+      last: 'never',
+      tags: ['New'],
+      notes: '',
+    };
+    addClient(next);
+    setSelected(next);
+    setShowDetail(true);
+  };
+
   const action = (
-    <button className="btn btn-primary btn-sm">
+    <button className="btn btn-primary btn-sm" onClick={handleAddClient}>
       {Icon.plus({ width: 13, height: 13 })} Add client
     </button>
   );
@@ -94,6 +111,7 @@ export default function ClientsScreen() {
             <ClientDetail
               client={selected}
               appts={appts}
+              services={services}
               isPro={isPro}
               onBack={() => setShowDetail(false)}
             />
@@ -104,7 +122,7 @@ export default function ClientsScreen() {
   );
 }
 
-function ClientDetail({ client, appts, isPro, onBack }) {
+function ClientDetail({ client, appts, services, isPro, onBack }) {
   const [tab, setTab] = useState('overview');
   const history = appts.filter(a => a.clientId === client.id);
 
@@ -189,7 +207,7 @@ function ClientDetail({ client, appts, isPro, onBack }) {
           <div>
             <div className="label" style={{ marginBottom: 10 }}>{history.length} appointments this week</div>
             {history.map(a => {
-              const s = findService(a.serviceId);
+              const s = services.find(service => service.id === a.serviceId) || {};
               return (
                 <div key={a.id} style={{
                   display: 'flex', gap: 12, padding: '12px 0', borderBottom: '1px solid var(--line)', alignItems: 'center',

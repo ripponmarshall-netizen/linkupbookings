@@ -1,9 +1,8 @@
 import { useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
 import DashboardShell from '../components/DashboardShell.jsx';
 import { Icon, Avatar } from '../components/shared.jsx';
 import { useApp } from '../context/AppContext.jsx';
-import { findClient, findService, fmtTime, fmtJ, DAYS, DAY_DATES, MONTH } from '../data/seed.js';
+import { fmtTime, fmtJ, DAYS, DAY_DATES, MONTH } from '../data/seed.js';
 import AddApptModal from '../modals/AddApptModal.jsx';
 import BlockOffModal from '../modals/BlockOffModal.jsx';
 import FillSlotModal from '../modals/FillSlotModal.jsx';
@@ -17,7 +16,9 @@ const HOURS = [9, 10, 11, 12, 13, 14, 15, 16, 17];
 const H = 64; // pixels per hour
 
 export default function CalendarScreen() {
-  const { appts, blocks } = useApp();
+  const { appts, blocks, clients, services } = useApp();
+  const findClient = (id) => clients.find(c => c.id === id) || {};
+  const findService = (id) => services.find(s => s.id === id) || {};
   const [view, setView] = useState('week');
   const [dayIdx, setDayIdx] = useState(TODAY_IDX);
   const [modal, setModal] = useState(null);

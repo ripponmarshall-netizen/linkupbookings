@@ -206,7 +206,7 @@ export default function DayEndScreen() {
               fontSize: 11.5, color: 'var(--muted)', lineHeight: 1.5,
             }}>
               <div className="mono" style={{ fontSize: 9, letterSpacing: '0.08em', marginBottom: 4 }}>SCHEDULED</div>
-              Auto-sends every weekday at 6:30pm to your WhatsApp · <a href="#" style={{ color: 'var(--forest)' }}>change</a>
+              Auto-sends every weekday at 6:30pm to your WhatsApp · <button type="button" onClick={() => setShare('team')} style={{ color: 'var(--forest)', textDecoration: 'underline' }}>change</button>
             </div>
           </div>
         </div>

@@ -71,6 +71,22 @@ function reducer(state, action) {
     case 'ADD_CLIENT':
       return { ...state, clients: [...state.clients, action.client] };
 
+    case 'ADD_SERVICE':
+      return { ...state, services: [...state.services, action.service] };
+
+    case 'UPDATE_SERVICE':
+      return {
+        ...state,
+        services: state.services.map(s => s.id === action.id ? { ...s, ...action.patch } : s),
+      };
+
+    case 'REMOVE_SERVICE':
+      return {
+        ...state,
+        services: state.services.filter(s => s.id !== action.id),
+        appts: state.appts.filter(a => a.serviceId !== action.id),
+      };
+
     case 'UPDATE_CLIENT':
       return {
         ...state,
@@ -98,6 +114,9 @@ export function AppProvider({ children }) {
     markPaid:     (id, method, tip = 0) => dispatch({ type: 'MARK_PAID', id, method, tip }),
     addBlock:     (block)               => dispatch({ type: 'ADD_BLOCK', block }),
     addClient:    (client)              => dispatch({ type: 'ADD_CLIENT', client }),
+    addService:   (service)             => dispatch({ type: 'ADD_SERVICE', service }),
+    updateService:(id, patch)           => dispatch({ type: 'UPDATE_SERVICE', id, patch }),
+    removeService:(id)                  => dispatch({ type: 'REMOVE_SERVICE', id }),
     updateClient: (id, patch)           => dispatch({ type: 'UPDATE_CLIENT', id, patch }),
     reset:        ()                    => dispatch({ type: 'RESET' }),
   };

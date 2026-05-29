@@ -1,10 +1,17 @@
 import ModalShell from '../components/ModalShell.jsx';
 import { Icon } from '../components/shared.jsx';
-import { findClient, findService, fmtTime, fmtJ, DAYS, DAY_DATES } from '../data/seed.js';
+import { useApp } from '../context/AppContext.jsx';
+import { fmtTime, fmtJ, DAYS, DAY_DATES } from '../data/seed.js';
 
 export default function ApptDetailModal({ appt, onClose }) {
-  const c = findClient(appt.clientId);
-  const s = findService(appt.serviceId);
+  const { clients, services, removeAppt } = useApp();
+  const c = clients.find(client => client.id === appt.clientId) || {};
+  const s = services.find(service => service.id === appt.serviceId) || {};
+
+  const handleDelete = () => {
+    removeAppt(appt.id);
+    onClose();
+  };
 
   return (
     <ModalShell onClose={onClose} width={420}>
@@ -72,7 +79,7 @@ export default function ApptDetailModal({ appt, onClose }) {
           <button className="btn btn-secondary btn-sm" style={{ flex: 1 }}>
             {Icon.pencil({ width: 13, height: 13 })} Edit
           </button>
-          <button className="btn btn-secondary btn-sm" style={{ padding: '6px 10px' }}>
+          <button className="btn btn-secondary btn-sm" onClick={handleDelete} style={{ padding: '6px 10px' }}>
             {Icon.trash({ width: 13, height: 13, style: { color: 'var(--terracotta)' } })}
           </button>
         </div>
