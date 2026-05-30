@@ -70,11 +70,11 @@ export default function ShareLinkModal({ onClose }) {
             border: '1px solid var(--line)', borderRadius: 8, display: 'flex',
             alignItems: 'center', justifyContent: 'center',
           }}>
-            {Icon.qr ? Icon.qr({ width: 80, height: 80 }) : <span className="mono" style={{ fontSize: 10 }}>QR</span>}
+            {Icon.qr({ width: 80, height: 80, style: { color: 'var(--ink)' } })}
           </div>
           <div style={{ fontSize: 12, color: 'var(--muted)' }}>Scan to book · print for your salon</div>
           <button className="btn btn-secondary btn-sm" style={{ marginTop: 12 }} onClick={() => { toast('Opening print dialog…'); printPage(); }}>
-            {Icon.download ? Icon.download({ width: 13, height: 13 }) : null} Download PDF
+            {Icon.download({ width: 13, height: 13 })} Download PDF
           </button>
         </div>
       </div>
