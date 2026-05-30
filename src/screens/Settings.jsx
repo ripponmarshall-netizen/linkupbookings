@@ -1,332 +1,292 @@
 import { useState } from 'react';
 import DashboardShell from '../components/DashboardShell.jsx';
-import { Icon, Toggle } from '../components/shared.jsx';
+import { Icon } from '../components/shared.jsx';
 import { useApp } from '../context/AppContext.jsx';
+import { useToast } from '../components/Toast.jsx';
+import { copyToClipboard, printPage } from '../utils/actions.js';
+import ConfirmModal from '../modals/ConfirmModal.jsx';
 
-const SECTIONS = [
-  { key: 'profile',     label: 'Profile',             icon: Icon.users },
-  { key: 'hours',       label: 'Hours & buffer',       icon: Icon.clock },
-  { key: 'payments',    label: 'Payments & deposits',  icon: Icon.cash },
-  { key: 'booking',     label: 'Booking page',         icon: Icon.globe },
-  { key: 'notifs',      label: 'Notifications',        icon: Icon.bell },
-  { key: 'vacation',    label: 'Vacation mode',        icon: Icon.lock },
-  { key: 'billing',     label: 'Plan & billing',       icon: Icon.sparkle },
-  { key: 'account',     label: 'Account',              icon: Icon.settings },
-];
+const TABS = ['Profile', 'Hours', 'Payments', 'Booking', 'Notifications', 'Billing', 'Account'];
 
 export default function SettingsScreen() {
   const { isPro, togglePro } = useApp();
-  const [section, setSection] = useState('profile');
-  const [vacationOn, setVacationOn] = useState(false);
+  const [tab, setTab] = useState('Profile');
 
   return (
-    <DashboardShell title="Settings" sub="Business, hours, integrations">
-      <div className="split-pane" style={{ display: 'flex', height: '100%', minHeight: 0 }}>
-        {/* Section nav */}
-        <div className="split-pane-rail" style={{ width: 220, borderRight: '1px solid var(--line)', background: 'var(--card-warm)', flexShrink: 0, overflowY: 'auto' }}>
-          <div style={{ padding: '16px 0' }}>
-            {SECTIONS.map(s => (
-              <button key={s.key} onClick={() => setSection(s.key)} style={{
-                width: '100%', display: 'flex', alignItems: 'center', gap: 10,
-                padding: '10px 20px', fontSize: 13.5, textAlign: 'left',
-                background: section === s.key ? 'var(--paper-2)' : 'transparent',
-                color: section === s.key ? 'var(--ink)' : 'var(--ink-2)',
-                fontWeight: section === s.key ? 500 : 400,
-                borderLeft: section === s.key ? '3px solid var(--forest)' : '3px solid transparent',
-              }}>
-                <span style={{ color: section === s.key ? 'var(--forest)' : 'var(--muted)' }}>
-                  {s.icon({ width: 16, height: 16 })}
-                </span>
-                {s.label}
-              </button>
-            ))}
-          </div>
+    <DashboardShell title="Settings" sub="Manage your account and preferences">
+      <div className="split-pane" style={{ display: 'flex', height: '100%' }}>
+        {/* Settings nav */}
+        <div className="split-pane-rail" style={{ width: 200, borderRight: '1px solid var(--line)', padding: '16px 0', flexShrink: 0, background: 'var(--card-warm)' }}>
+          {TABS.map(t => (
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              style={{
+                width: '100%', textAlign: 'left', padding: '10px 20px', fontSize: 13.5,
+                background: tab === t ? 'var(--paper-2)' : 'transparent',
+                color: tab === t ? 'var(--ink)' : 'var(--muted)',
+                fontWeight: tab === t ? 600 : 400,
+                borderLeft: tab === t ? '2px solid var(--forest)' : '2px solid transparent',
+              }}
+            >
+              {t}
+            </button>
+          ))}
         </div>
 
-        {/* Content */}
+        {/* Settings content */}
         <div className="split-pane-body" style={{ flex: 1, overflowY: 'auto', padding: '28px 32px' }}>
-          {section === 'profile' && <ProfileSection />}
-          {section === 'hours'   && <HoursSection />}
-          {section === 'payments' && <PaymentsSection isPro={isPro} />}
-          {section === 'booking' && <BookingSection isPro={isPro} />}
-          {section === 'notifs'  && <NotifsSection />}
-          {section === 'vacation' && <VacationSection on={vacationOn} setOn={setVacationOn} />}
-          {section === 'billing' && <BillingSection isPro={isPro} onToggle={togglePro} />}
-          {section === 'account' && <AccountSection />}
+          {tab === 'Profile' && <ProfileSettings />}
+          {tab === 'Hours' && <HoursSettings />}
+          {tab === 'Payments' && <PaymentsSettings />}
+          {tab === 'Booking' && <BookingSettings />}
+          {tab === 'Notifications' && <NotificationsSettings />}
+          {tab === 'Billing' && <BillingSettings isPro={isPro} togglePro={togglePro} />}
+          {tab === 'Account' && <AccountSettings />}
         </div>
       </div>
     </DashboardShell>
   );
 }
 
-function SectionHeader({ title, sub }) {
-  return (
-    <div style={{ marginBottom: 24, paddingBottom: 16, borderBottom: '1px solid var(--line)' }}>
-      <div style={{ fontSize: 20, fontWeight: 600, marginBottom: 4 }}>{title}</div>
-      {sub && <div style={{ fontSize: 13, color: 'var(--muted)', lineHeight: 1.5 }}>{sub}</div>}
-    </div>
-  );
-}
-
-function FormRow({ label, children }) {
+function Field({ label, children, htmlFor }) {
   return (
     <div style={{ marginBottom: 18 }}>
-      <div className="label" style={{ marginBottom: 6 }}>{label}</div>
+      <label className="label" htmlFor={htmlFor} style={{ display: 'block', marginBottom: 6 }}>{label}</label>
       {children}
     </div>
   );
 }
 
-function ToggleRow({ label, sub, on, onChange }) {
+/** Persist Settings sub-sections to localStorage under their own key so each save sticks. */
+function useSettingsForm(section, initial) {
+  const key = `lup_settings_${section}`;
+  const [form, setForm] = useState(() => {
+    try {
+      const raw = localStorage.getItem(key);
+      if (raw) return { ...initial, ...JSON.parse(raw) };
+    } catch { /* ignore */ }
+    return initial;
+  });
+  const set = (patch) => setForm(f => ({ ...f, ...patch }));
+  const persist = () => {
+    try { localStorage.setItem(key, JSON.stringify(form)); } catch { /* ignore */ }
+  };
+  return [form, set, persist];
+}
+
+function ProfileSettings() {
+  const { toast } = useToast();
+  const [form, set, persist] = useSettingsForm('profile', {
+    business: 'Glow Nail Studio',
+    name: 'Tanya Williams',
+    bio: "Kingston's cosiest nail studio ✨",
+    whatsapp: '+1 876 555 0199',
+    location: '12 Hope Road, Kingston 6',
+  });
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 0', borderBottom: '1px solid var(--line)' }}>
-      <div>
-        <div style={{ fontSize: 13.5, fontWeight: 500 }}>{label}</div>
-        {sub && <div style={{ fontSize: 11.5, color: 'var(--muted)', marginTop: 2 }}>{sub}</div>}
-      </div>
-      <Toggle on={on} onChange={onChange} />
+    <div style={{ maxWidth: 480 }}>
+      <h2 className="serif" style={{ fontSize: 22, margin: '0 0 20px', fontWeight: 400 }}>Profile</h2>
+      <Field label="Business name" htmlFor="set-business"><input id="set-business" className="input" value={form.business} onChange={e => set({ business: e.target.value })} /></Field>
+      <Field label="Your name" htmlFor="set-name"><input id="set-name" className="input" value={form.name} onChange={e => set({ name: e.target.value })} /></Field>
+      <Field label="Bio" htmlFor="set-bio"><textarea id="set-bio" className="textarea" rows="3" value={form.bio} onChange={e => set({ bio: e.target.value })} /></Field>
+      <Field label="WhatsApp number" htmlFor="set-wa"><input id="set-wa" className="input" value={form.whatsapp} onChange={e => set({ whatsapp: e.target.value })} /></Field>
+      <Field label="Location" htmlFor="set-loc"><input id="set-loc" className="input" value={form.location} onChange={e => set({ location: e.target.value })} /></Field>
+      <button className="btn btn-primary" onClick={() => { persist(); toast('Profile saved', { tone: 'success' }); }}>Save changes</button>
     </div>
   );
 }
 
-function ProfileSection() {
-  return (
-    <div>
-      <SectionHeader title="Business profile" sub="This appears on yuh booking page and receipts." />
-      <FormRow label="Business name">
-        <input className="input" defaultValue="Glow Nail Studio" />
-      </FormRow>
-      <FormRow label="Bio / tagline">
-        <textarea className="textarea" rows={3} defaultValue="Honest nails, nuh wait, nuh stress. Kingston's best kept secret." style={{ resize: 'none' }} />
-      </FormRow>
-      <FormRow label="WhatsApp Business number">
-        <input className="input" defaultValue="+1 876 555 0100" />
-      </FormRow>
-      <FormRow label="Location">
-        <input className="input" defaultValue="Half-Way-Tree, Kingston" />
-      </FormRow>
-      <button className="btn btn-primary">Save changes</button>
-    </div>
+function HoursSettings() {
+  const { toast } = useToast();
+  const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  const [hours, setHours, persist] = useSettingsForm('hours',
+    days.reduce((acc, d) => ({ ...acc, [d]: { open: d !== 'Sunday', from: '9:00am', to: '6:00pm' } }), {})
   );
-}
-
-function HoursSection() {
-  const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
-  const defaults = [
-    { open: true, start: '9:00', end: '18:00' },
-    { open: true, start: '9:00', end: '18:00' },
-    { open: true, start: '9:00', end: '18:00' },
-    { open: true, start: '9:00', end: '18:00' },
-    { open: true, start: '9:00', end: '17:00' },
-    { open: true, start: '9:00', end: '16:00' },
-    { open: false, start: '10:00', end: '15:00' },
-  ];
-  const [hours, setHours] = useState(defaults);
-
+  const [buffer, setBuffer, persistBuffer] = useSettingsForm('buffer', { mins: '15' });
   return (
-    <div>
-      <SectionHeader title="Working hours" sub="Set yuh open hours. Clients can only book within these times." />
-      <div style={{ background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 12, overflow: 'hidden', marginBottom: 20 }}>
-        {DAYS.map((d, i) => (
-          <div key={d} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '14px 16px', borderBottom: i < 6 ? '1px solid var(--line)' : 'none' }}>
-            <Toggle on={hours[i].open} onChange={v => setHours(h => h.map((x, j) => j === i ? { ...x, open: v } : x))} size="sm" />
-            <div style={{ width: 90, fontSize: 13.5, fontWeight: 500, color: hours[i].open ? 'var(--ink)' : 'var(--muted)' }}>{d}</div>
-            {hours[i].open ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <select className="select" style={{ width: 90 }} defaultValue={hours[i].start}>
-                  {['8:00','9:00','10:00','11:00'].map(t => <option key={t}>{t}</option>)}
-                </select>
-                <span style={{ color: 'var(--muted)' }}>–</span>
-                <select className="select" style={{ width: 90 }} defaultValue={hours[i].end}>
-                  {['16:00','17:00','18:00','19:00','20:00'].map(t => <option key={t}>{t}</option>)}
-                </select>
-              </div>
-            ) : (
-              <span style={{ fontSize: 13, color: 'var(--muted)', fontStyle: 'italic' }}>Closed</span>
-            )}
-          </div>
-        ))}
-      </div>
-      <FormRow label="Buffer between appointments">
-        <select className="select" style={{ maxWidth: 200 }}>
-          <option>None</option>
-          <option>10 minutes</option>
-          <option>15 minutes</option>
-          <option>30 minutes</option>
+    <div style={{ maxWidth: 480 }}>
+      <h2 className="serif" style={{ fontSize: 22, margin: '0 0 20px', fontWeight: 400 }}>Working hours</h2>
+      {days.map(d => (
+        <div key={d} style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+          <div style={{ width: 90, fontSize: 13 }}>{d}</div>
+          <button
+            aria-label={`Toggle ${d} ${hours[d].open ? 'closed' : 'open'}`}
+            onClick={() => setHours({ [d]: { ...hours[d], open: !hours[d].open } })}
+            style={{
+              width: 38, height: 22, borderRadius: 11, flexShrink: 0,
+              background: hours[d].open ? 'var(--forest)' : 'var(--line-2)', position: 'relative',
+            }}
+          >
+            <div style={{ position: 'absolute', top: 2, left: hours[d].open ? 18 : 2, width: 18, height: 18, borderRadius: '50%', background: '#fbf6ec', transition: 'left 120ms' }} />
+          </button>
+          {hours[d].open ? (
+            <div style={{ display: 'flex', gap: 6, alignItems: 'center', fontSize: 12.5, color: 'var(--muted)' }}>
+              <input className="input" style={{ width: 92, padding: '6px 8px' }} value={hours[d].from} onChange={e => setHours({ [d]: { ...hours[d], from: e.target.value } })} aria-label={`${d} open time`} />
+              <span>–</span>
+              <input className="input" style={{ width: 92, padding: '6px 8px' }} value={hours[d].to} onChange={e => setHours({ [d]: { ...hours[d], to: e.target.value } })} aria-label={`${d} close time`} />
+            </div>
+          ) : (
+            <span style={{ fontSize: 12.5, color: 'var(--muted-2)' }}>Closed</span>
+          )}
+        </div>
+      ))}
+      <div style={{ marginTop: 18 }}>
+        <label className="label" htmlFor="set-buffer" style={{ display: 'block', marginBottom: 6 }}>Buffer between appointments</label>
+        <select id="set-buffer" className="select" value={buffer.mins} onChange={e => setBuffer({ mins: e.target.value })} style={{ maxWidth: 200 }}>
+          {['0', '5', '10', '15', '30'].map(m => <option key={m} value={m}>{m} minutes</option>)}
         </select>
-      </FormRow>
-      <button className="btn btn-primary">Save hours</button>
-    </div>
-  );
-}
-
-function PaymentsSection({ isPro }) {
-  const [prefs, setPrefs] = useState({ deposit: isPro, cards: isPro, bank: true });
-  const toggle = (key, value) => setPrefs(p => ({ ...p, [key]: value }));
-  return (
-    <div>
-      <SectionHeader title="Payments & deposits" sub="How yuh collect money." />
-      {!isPro && (
-        <div style={{ background: 'var(--terracotta-soft)', borderRadius: 10, padding: 16, marginBottom: 20, borderLeft: '3px solid var(--terracotta)' }}>
-          <div style={{ fontSize: 13, color: '#8d3f1e', lineHeight: 1.5 }}>
-            🔒 Deposits and card payments require Pro. Free plan: cash and bank transfer only.
-          </div>
-        </div>
-      )}
-      <ToggleRow label="Require deposit on booking" sub="25% upfront via WhatsApp link" on={prefs.deposit} onChange={v => toggle('deposit', isPro ? v : false)} />
-      <ToggleRow label="Accept card payments" sub="Lynk, NCB, Visa" on={prefs.cards} onChange={v => toggle('cards', isPro ? v : false)} />
-      <ToggleRow label="Accept bank transfer" sub="Show account details on receipt" on={prefs.bank} onChange={v => toggle('bank', v)} />
-      <div style={{ marginTop: 20 }}>
-        <FormRow label="Cash instructions">
-          <textarea className="textarea" rows={2} defaultValue="Pay on arrival. Exact change appreciated." style={{ resize: 'none' }} />
-        </FormRow>
       </div>
-      <button className="btn btn-primary" style={{ marginTop: 8 }}>Save</button>
+      <button className="btn btn-primary" style={{ marginTop: 18 }} onClick={() => { persist(); persistBuffer(); toast('Hours saved', { tone: 'success' }); }}>Save hours</button>
     </div>
   );
 }
 
-function BookingSection({ isPro }) {
-  const [prefs, setPrefs] = useState({ showPrice: true, showReviews: isPro });
-  const toggle = (key, value) => setPrefs(p => ({ ...p, [key]: value }));
+function PaymentsSettings() {
+  const { toast } = useToast();
+  const methods = ['Cash', 'Card (Square)', 'Bank transfer', 'Lynk / WiPay'];
+  const [form, set, persist] = useSettingsForm('payments', { enabled: ['Cash', 'Card (Square)'] });
+  const toggle = (m) => set({ enabled: form.enabled.includes(m) ? form.enabled.filter(x => x !== m) : [...form.enabled, m] });
   return (
-    <div>
-      <SectionHeader title="Booking page" sub="How yuh page looks to clients." />
-      {!isPro && (
-        <div style={{ background: 'var(--terracotta-soft)', borderRadius: 10, padding: 14, marginBottom: 20, fontSize: 13, color: '#8d3f1e', borderLeft: '3px solid var(--terracotta)' }}>
-          🔒 Booking page customisation is a Pro feature.
+    <div style={{ maxWidth: 480 }}>
+      <h2 className="serif" style={{ fontSize: 22, margin: '0 0 20px', fontWeight: 400 }}>Payments</h2>
+      <p style={{ fontSize: 13, color: 'var(--muted)', lineHeight: 1.6, marginBottom: 20 }}>
+        Choose how clients pay deposits and balances.
+      </p>
+      {methods.map((m, i) => (
+        <label key={m} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: i < 3 ? '1px solid var(--line)' : 'none', cursor: 'pointer' }}>
+          <input type="checkbox" checked={form.enabled.includes(m)} onChange={() => toggle(m)} style={{ width: 16, height: 16, accentColor: 'var(--forest)' }} />
+          <span style={{ fontSize: 13.5 }}>{m}</span>
+        </label>
+      ))}
+      <button className="btn btn-primary" style={{ marginTop: 20 }} onClick={() => { persist(); toast('Payment methods saved', { tone: 'success' }); }}>Save</button>
+    </div>
+  );
+}
+
+function BookingSettings() {
+  const { toast } = useToast();
+  const [form, set, persist] = useSettingsForm('booking', {
+    welcome: 'Book your appointment below ✨',
+    showPrices: true,
+  });
+  const link = 'lup.bk/glow';
+  return (
+    <div style={{ maxWidth: 480 }}>
+      <h2 className="serif" style={{ fontSize: 22, margin: '0 0 20px', fontWeight: 400 }}>Booking page</h2>
+      <Field label="Your booking link" htmlFor="set-link">
+        <div style={{ display: 'flex', gap: 8 }}>
+          <input id="set-link" className="input" value={link} readOnly style={{ flex: 1 }} />
+          <button className="btn btn-secondary btn-sm" onClick={async () => { const ok = await copyToClipboard(`https://${link}`); toast(ok ? 'Link copied' : 'Copy failed', { tone: ok ? 'success' : 'error' }); }}>Copy</button>
         </div>
-      )}
-      <FormRow label="Page slug">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 13.5, color: 'var(--muted)' }}>linkupbookings.com/</span>
-          <input className="input" defaultValue="glow" style={{ maxWidth: 160 }} />
-        </div>
-      </FormRow>
-      <FormRow label="Hero message">
-        <textarea className="textarea" rows={2} defaultValue="Honest nails, nuh wait, nuh stress." style={{ resize: 'none' }} />
-      </FormRow>
-      <ToggleRow label="Show price on booking page" sub="Visible to clients before they book" on={prefs.showPrice} onChange={v => toggle('showPrice', v)} />
-      <ToggleRow label="Show reviews on booking page" sub="Auto-pulled from Google & WhatsApp" on={prefs.showReviews} onChange={v => toggle('showReviews', isPro ? v : false)} />
-      <button className="btn btn-primary" style={{ marginTop: 16 }}>Save</button>
+      </Field>
+      <Field label="Welcome message" htmlFor="set-welcome"><textarea id="set-welcome" className="textarea" rows="3" value={form.welcome} onChange={e => set({ welcome: e.target.value })} /></Field>
+      <label style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', cursor: 'pointer' }}>
+        <input type="checkbox" checked={form.showPrices} onChange={e => set({ showPrices: e.target.checked })} style={{ width: 16, height: 16, accentColor: 'var(--forest)' }} />
+        <span style={{ fontSize: 13.5 }}>Show prices publicly</span>
+      </label>
+      <button className="btn btn-primary" style={{ marginTop: 20 }} onClick={() => { persist(); toast('Booking page saved', { tone: 'success' }); }}>Save</button>
     </div>
   );
 }
 
-function NotifsSection() {
-  const [prefs, setPrefs] = useState({ booking: true, cancelled: true, deposit: true, message: true, summary: true, report: false });
-  const toggle = (key, value) => setPrefs(p => ({ ...p, [key]: value }));
+function NotificationsSettings() {
+  const { toast } = useToast();
+  const items = ['New booking', 'Cancellation', 'Payment received', 'Daily summary', 'Weekly report'];
+  const [form, set, persist] = useSettingsForm('notifs', { enabled: items.slice(0, 3) });
+  const toggle = (it) => set({ enabled: form.enabled.includes(it) ? form.enabled.filter(x => x !== it) : [...form.enabled, it] });
   return (
-    <div>
-      <SectionHeader title="Notifications" sub="When yuh get pinged." />
-      <ToggleRow label="New booking" sub="Push + WhatsApp" on={prefs.booking} onChange={v => toggle('booking', v)} />
-      <ToggleRow label="Booking cancelled" sub="Push only" on={prefs.cancelled} onChange={v => toggle('cancelled', v)} />
-      <ToggleRow label="Deposit received" sub="Push + WhatsApp" on={prefs.deposit} onChange={v => toggle('deposit', v)} />
-      <ToggleRow label="Client message" sub="Push only" on={prefs.message} onChange={v => toggle('message', v)} />
-      <ToggleRow label="Day summary at 8pm" sub="WhatsApp summary of the day" on={prefs.summary} onChange={v => toggle('summary', v)} />
-      <ToggleRow label="Weekly report on Sunday" sub="Revenue, busiest day, top client" on={prefs.report} onChange={v => toggle('report', v)} />
+    <div style={{ maxWidth: 480 }}>
+      <h2 className="serif" style={{ fontSize: 22, margin: '0 0 20px', fontWeight: 400 }}>Notifications</h2>
+      {items.map((it, i) => (
+        <label key={it} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: i < 4 ? '1px solid var(--line)' : 'none', cursor: 'pointer' }}>
+          <input type="checkbox" checked={form.enabled.includes(it)} onChange={() => toggle(it)} style={{ width: 16, height: 16, accentColor: 'var(--forest)' }} />
+          <span style={{ fontSize: 13.5 }}>{it}</span>
+        </label>
+      ))}
+      <button className="btn btn-primary" style={{ marginTop: 20 }} onClick={() => { persist(); toast('Notification preferences saved', { tone: 'success' }); }}>Save</button>
     </div>
   );
 }
 
-function VacationSection({ on, setOn }) {
+function BillingSettings({ isPro, togglePro }) {
+  const { toast } = useToast();
   return (
-    <div>
-      <SectionHeader title="Vacation mode" sub="Block new bookings while yuh away. Existing appointments are unaffected." />
+    <div style={{ maxWidth: 480 }}>
+      <h2 className="serif" style={{ fontSize: 22, margin: '0 0 20px', fontWeight: 400 }}>Billing</h2>
       <div style={{
-        background: on ? 'rgba(196,102,61,0.06)' : 'var(--card)',
-        border: `1px solid ${on ? 'var(--terracotta)' : 'var(--line)'}`,
-        borderRadius: 14, padding: 20, marginBottom: 20, transition: 'all 200ms',
+        padding: 20, borderRadius: 12, marginBottom: 20,
+        background: isPro ? 'var(--forest-soft)' : 'var(--paper-2)',
+        border: `1px solid ${isPro ? 'var(--forest)' : 'var(--line)'}`,
       }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: on ? 16 : 0 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <div style={{ fontSize: 16, fontWeight: 600 }}>{on ? '✈️ On vacation' : 'Turn on vacation mode'}</div>
-            <div style={{ fontSize: 13, color: 'var(--muted)', marginTop: 4 }}>Booking page shows "unavailable" during this period</div>
-          </div>
-          <Toggle on={on} onChange={setOn} />
-        </div>
-        {on && (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 4 }}>
-            <FormRow label="From"><input type="date" className="input" defaultValue="2026-06-15" /></FormRow>
-            <FormRow label="To"><input type="date" className="input" defaultValue="2026-06-22" /></FormRow>
-          </div>
-        )}
-      </div>
-      {on && (
-        <div style={{ background: 'var(--terracotta-soft)', borderRadius: 10, padding: 14, fontSize: 12.5, color: '#8d3f1e', lineHeight: 1.55 }}>
-          Clients who try to book between Jun 15–22 will see your vacation message instead of the slot picker.
-        </div>
-      )}
-    </div>
-  );
-}
-
-function BillingSection({ isPro, onToggle }) {
-  return (
-    <div>
-      <SectionHeader title="Plan & billing" />
-      <div style={{
-        background: isPro ? 'var(--ink)' : 'var(--card)',
-        color: isPro ? '#fbf6ec' : 'var(--ink)',
-        border: `1px solid ${isPro ? 'var(--ink)' : 'var(--line)'}`,
-        borderRadius: 14, padding: 24, marginBottom: 20,
-      }}>
-        <div className="mono" style={{ fontSize: 10, letterSpacing: '0.1em', marginBottom: 8, color: isPro ? 'var(--ochre)' : 'var(--muted)' }}>
-          {isPro ? '✦ PRO PLAN' : 'FREE PLAN'}
-        </div>
-        <div className="serif" style={{ fontSize: 36, marginBottom: 8 }}>
-          {isPro ? 'J$400 / month' : 'J$0 / month'}
-        </div>
-        <div style={{ fontSize: 13.5, color: isPro ? '#c8bda4' : 'var(--muted)', lineHeight: 1.5 }}>
-          {isPro ? 'All features, no limits. Cancel anytime.' : 'Calendar management only. No online booking.'}
-        </div>
-        <button onClick={onToggle} style={{
-          marginTop: 16, padding: '10px 20px', borderRadius: 8, fontSize: 13.5, fontWeight: 600,
-          background: isPro ? 'rgba(255,255,255,0.1)' : 'var(--terracotta)',
-          color: isPro ? '#fbf6ec' : '#fff',
-          border: isPro ? '1px solid rgba(255,255,255,0.15)' : 'none',
-        }}>
-          {isPro ? 'Cancel plan' : 'Upgrade to Pro — J$400/mo'}
-        </button>
-      </div>
-
-      <div className="label" style={{ marginBottom: 10 }}>Invoices</div>
-      <div style={{ background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 12, overflow: 'hidden' }}>
-        {['May 2026','Apr 2026','Mar 2026'].map((m, i) => (
-          <div key={m} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', borderBottom: i < 2 ? '1px solid var(--line)' : 'none' }}>
-            <span style={{ fontSize: 13.5 }}>{m}</span>
-            <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-              <span style={{ fontSize: 13, color: 'var(--muted)' }}>J$400</span>
-              <span className="chip chip-forest" style={{ fontSize: 10 }}>Paid</span>
-              <button style={{ color: 'var(--forest)', fontSize: 12 }}>Download</button>
+            <div style={{ fontSize: 16, fontWeight: 600 }}>{isPro ? 'Pro plan' : 'Free plan'}</div>
+            <div style={{ fontSize: 12.5, color: 'var(--muted)', marginTop: 2 }}>
+              {isPro ? 'J$2,400/month · renews 14 Jun' : 'Upgrade for unlimited everything'}
             </div>
           </div>
-        ))}
+          <button className={isPro ? 'btn btn-secondary btn-sm' : 'btn btn-primary btn-sm'} onClick={togglePro}>
+            {isPro ? 'Manage' : 'Upgrade'}
+          </button>
+        </div>
       </div>
+      <div className="label" style={{ marginBottom: 12 }}>Invoices</div>
+      {['May 2026', 'April 2026', 'March 2026'].map((m, i) => (
+        <div key={m} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: i < 2 ? '1px solid var(--line)' : 'none' }}>
+          <span style={{ fontSize: 13 }}>{m}</span>
+          <button style={{ fontSize: 12.5, color: 'var(--forest)' }} onClick={() => { toast(`Preparing ${m} invoice…`); printPage(); }}>Download</button>
+        </div>
+      ))}
     </div>
   );
 }
 
-function AccountSection() {
-  return (
-    <div>
-      <SectionHeader title="Account" sub="Yuh personal login and security." />
-      <FormRow label="Name"><input className="input" defaultValue="Tanya Williams" /></FormRow>
-      <FormRow label="Email"><input className="input" defaultValue="tanya@glownailstudio.com" type="email" /></FormRow>
-      <FormRow label="Password"><input className="input" defaultValue="••••••••••" type="password" /></FormRow>
-      <button className="btn btn-primary" style={{ marginBottom: 32 }}>Save changes</button>
+function AccountSettings() {
+  const { toast } = useToast();
+  const { reset } = useApp();
+  const [form, set, persist] = useSettingsForm('account', { email: 'tanya@glow.jm', password: 'password123' });
+  const [confirm, setConfirm] = useState(false);
 
-      <div style={{ borderTop: '1px solid var(--line)', paddingTop: 24 }}>
-        <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--terracotta)', marginBottom: 12 }}>Danger zone</div>
+  function exportData() {
+    try {
+      const data = localStorage.getItem('lup_data') || '{}';
+      const blob = new Blob([data], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'linkupbookings-data.json';
+      a.click();
+      URL.revokeObjectURL(url);
+      toast('Data exported', { tone: 'success' });
+    } catch {
+      toast('Export failed', { tone: 'error' });
+    }
+  }
+
+  return (
+    <div style={{ maxWidth: 480 }}>
+      <h2 className="serif" style={{ fontSize: 22, margin: '0 0 20px', fontWeight: 400 }}>Account</h2>
+      <Field label="Email" htmlFor="set-email"><input id="set-email" className="input" value={form.email} onChange={e => set({ email: e.target.value })} /></Field>
+      <Field label="Password" htmlFor="set-pass"><input id="set-pass" className="input" type="password" value={form.password} onChange={e => set({ password: e.target.value })} /></Field>
+      <button className="btn btn-primary" onClick={() => { persist(); toast('Account updated', { tone: 'success' }); }}>Save changes</button>
+      <div style={{ marginTop: 32, paddingTop: 24, borderTop: '1px solid var(--line)' }}>
+        <div className="label" style={{ marginBottom: 12, color: 'var(--terracotta)' }}>Danger zone</div>
         <div style={{ display: 'flex', gap: 10 }}>
-          <button className="btn btn-secondary btn-sm" style={{ color: 'var(--terracotta)', borderColor: 'var(--terracotta)' }}>
-            Delete all data
-          </button>
-          <button className="btn btn-secondary btn-sm" style={{ color: 'var(--terracotta)', borderColor: 'var(--terracotta)' }}>
-            Close account
-          </button>
+          <button className="btn btn-secondary btn-sm" style={{ color: 'var(--terracotta)', borderColor: 'var(--terracotta)' }} onClick={exportData}>Export data</button>
+          <button className="btn btn-secondary btn-sm" style={{ color: 'var(--terracotta)', borderColor: 'var(--terracotta)' }} onClick={() => setConfirm(true)}>Delete account</button>
         </div>
       </div>
+      {confirm && (
+        <ConfirmModal
+          title="Delete all data?"
+          body="This resets the app to its starting state and clears every appointment, client, and setting on this device. This cannot be undone."
+          confirmLabel="Delete everything"
+          danger
+          onConfirm={() => { reset(); toast('All data deleted', { tone: 'error' }); }}
+          onClose={() => setConfirm(false)}
+        />
+      )}
     </div>
   );
 }

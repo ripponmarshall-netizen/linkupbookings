@@ -2,115 +2,117 @@ import { useState } from 'react';
 import DashboardShell from '../components/DashboardShell.jsx';
 import { Icon, Avatar } from '../components/shared.jsx';
 import { findClient } from '../data/seed.js';
+import { useToast } from '../components/Toast.jsx';
+import { waLink, openLink } from '../utils/actions.js';
+import EmptyState from '../components/EmptyState.jsx';
 
-const THREADS = [
-  { id: 't1', clientId: 'c3', last: "Saturday morning? Need to look fresh", unread: true, t: '11:42 AM', suggestion: 'book', messages: [
-    { from: 'them', t: '11:38 AM', body: "Hey Tanya! 💚" },
-    { from: 'them', t: '11:38 AM', body: "What yuh availability look like this weekend?" },
-    { from: 'them', t: '11:42 AM', body: "Saturday morning? Need to look fresh for my cousin's wedding" },
-  ]},
-  { id: 't2', clientId: 'c1', last: "Confirmed! See yuh tomorrow 💅", unread: false, t: 'Yesterday', messages: [
-    { from: 'us', t: 'Yesterday 4:20 PM', body: "Hey Tanisha 👋 Yuh booked for Gel Manicure tomorrow at 9:30am. See yuh then!" },
-    { from: 'them', t: 'Yesterday 4:32 PM', body: "Confirmed! See yuh tomorrow 💅" },
-  ]},
-  { id: 't3', clientId: 'c4', last: "Can mi bring my sister?", unread: true, t: 'Yesterday', suggestion: 'addon', messages: [
-    { from: 'them', t: 'Yesterday 8:14 PM', body: "Hey 👋 quick question" },
-    { from: 'them', t: 'Yesterday 8:14 PM', body: "Can mi bring my sister Friday? She want pedi same time as me" },
-  ]},
-  { id: 't4', clientId: 'c5', last: "Deposit paid ✓ J$2,000", unread: false, t: 'Sun', messages: [
-    { from: 'them', t: 'Sun 2:11 PM', body: "Deposit paid ✓ J$2,000" },
-  ]},
-  { id: 't5', clientId: 'c6', last: "Wuda yuh be open Tuesday next week?", unread: true, t: 'Sun', suggestion: 'book', messages: [
-    { from: 'them', t: 'Sun 9:02 AM', body: "Hey hun 💚" },
-    { from: 'them', t: 'Sun 9:02 AM', body: "Wuda yuh be open Tuesday next week?" },
-  ]},
+const INITIAL_THREADS = [
+  { id: 't1', clientId: 'c3', unread: 2, time: '2m', preview: "Yes please! 3pm works 💕", messages: [
+    { from: 'them', text: "Hi! Do you have any space this week for a fill?", time: '10:32am' },
+    { from: 'me', text: "Hey Aaliyah! Yes — Thursday 3pm just opened up. Want it?", time: '10:45am' },
+    { from: 'them', text: "Yes please! 3pm works 💕", time: '10:47am' },
+  ] },
+  { id: 't2', clientId: 'c1', unread: 0, time: '1h', preview: "Perfect, thank you!", messages: [
+    { from: 'them', text: "Morning! Just confirming my appointment for tomorrow", time: '9:15am' },
+    { from: 'me', text: "Yes, confirmed for 9am! See you then 😊", time: '9:20am' },
+    { from: 'them', text: "Perfect, thank you!", time: '9:22am' },
+  ] },
+  { id: 't3', clientId: 'c5', unread: 0, time: '3h', preview: "Sounds good!", messages: [
+    { from: 'them', text: "Can I move my Friday appointment?", time: '7:00am' },
+    { from: 'me', text: "Of course! What time works better?", time: '7:30am' },
+    { from: 'them', text: "Sounds good!", time: '8:00am' },
+  ] },
+  { id: 't4', clientId: 'c2', unread: 1, time: '5h', preview: "Thank you so much! 🙏", messages: [
+    { from: 'them', text: "Do you do nail art for kids?", time: '5:00am' },
+    { from: 'me', text: "Yes! I have special designs for little ones 💅", time: '5:30am' },
+    { from: 'them', text: "Thank you so much! 🙏", time: '6:00am' },
+  ] },
 ];
 
 const AI_SUGGESTIONS = {
-  book:  { intent: 'Wants to book', reply: "Hey {name}! Yuh lucky day — got a slot Sat 9am open right now. Want me to lock it in? Just say yes and it's yours 🤙", slots: ['Sat 9:00am', 'Sat 11:00am', 'Sat 2:00pm'] },
-  addon: { intent: 'Asking about add-on', reply: "Hey {name}! Yes, yuh sister can come 💅 Same slot works if she want a Pedicure — J$4,500. Want mi to add her on?" },
+  t1: { reply: "Perfect! I've booked you in for Thursday 3pm. See you then! 💕", tone: 'Friendly confirmation' },
+  t4: { reply: "We have kids' nail art from J$1,500! Would you like to book a slot?", tone: 'Helpful + upsell' },
 };
 
+function nowLabel() {
+  const d = new Date();
+  let h = d.getHours();
+  const m = d.getMinutes().toString().padStart(2, '0');
+  const ampm = h >= 12 ? 'pm' : 'am';
+  h = h % 12 || 12;
+  return `${h}:${m}${ampm}`;
+}
+
 export default function InboxScreen() {
+  const { toast } = useToast();
+  const [threads, setThreads] = useState(INITIAL_THREADS);
   const [selectedId, setSelectedId] = useState('t1');
   const [draft, setDraft] = useState('');
-  const [showThread, setShowThread] = useState(false);
+  const [search, setSearch] = useState('');
+  const [dismissedAI, setDismissedAI] = useState({});
 
-  const selected = THREADS.find(t => t.id === selectedId);
-  const unreadCount = THREADS.filter(t => t.unread).length;
-  const suggestion = selected?.suggestion ? AI_SUGGESTIONS[selected.suggestion] : null;
-
-  const handleSelect = (id) => {
+  const selectThread = (id) => {
     setSelectedId(id);
-    setShowThread(true);
-    const ai = THREADS.find(t => t.id === id)?.suggestion;
-    setDraft(ai ? AI_SUGGESTIONS[ai].reply.replace('{name}', findClient(THREADS.find(t => t.id === id).clientId).name?.split(' ')[0] || '') : '');
+    setThreads(ts => ts.map(t => t.id === id ? { ...t, unread: 0 } : t));
   };
 
-  const action = (
-    <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-      <span className="chip chip-forest" style={{ fontSize: 11, display: 'flex', alignItems: 'center', gap: 6 }}>
-        <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--forest)' }} />
-        +1 876 555 0100 · live
-      </span>
-      <button className="btn btn-secondary btn-sm hide-mobile">{Icon.settings({ width: 13, height: 13 })}</button>
-    </div>
-  );
+  const selected = threads.find(t => t.id === selectedId);
+  const ai = AI_SUGGESTIONS[selectedId];
+  const q = search.trim().toLowerCase();
+  const visible = q
+    ? threads.filter(t => findClient(t.clientId).name?.toLowerCase().includes(q) || t.preview.toLowerCase().includes(q))
+    : threads;
+
+  function send() {
+    const text = draft.trim();
+    if (!text || !selected) return;
+    const msg = { from: 'me', text, time: nowLabel() };
+    setThreads(ts => ts.map(t => t.id === selectedId
+      ? { ...t, messages: [...t.messages, msg], preview: text, time: 'now' }
+      : t));
+    setDraft('');
+  }
 
   return (
-    <DashboardShell title="Messages" sub={`${unreadCount} unread · WhatsApp Business`} action={action}>
-      <div style={{ display: 'flex', height: '100%', minHeight: 0 }}>
+    <DashboardShell title="Inbox" sub="Messages from your clients">
+      <div style={{ display: 'flex', height: '100%' }}>
         {/* Thread list */}
-        <div style={{
-          width: showThread ? 'auto' : '100%',
-          flex: showThread ? '0 0 300px' : '1',
-          borderRight: showThread ? '1px solid var(--line)' : 'none',
-          display: 'flex', flexDirection: 'column',
-          background: 'var(--card-warm)', overflow: 'hidden',
-        }}>
-          {/* Filter */}
-          <div style={{ padding: '10px 14px', borderBottom: '1px solid var(--line)', display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-            {['All','Unread','Asking to book'].map((f, i) => (
-              <button key={f} className="chip" style={{
-                background: i === 0 ? 'var(--ink)' : 'var(--card)',
-                color: i === 0 ? '#fbf6ec' : 'var(--ink-2)',
-                border: i === 0 ? '1px solid var(--ink)' : '1px solid var(--line)',
-                cursor: 'pointer', fontSize: 11.5,
-              }}>{f}{i === 1 && <span className="mono" style={{ fontSize: 9, marginLeft: 4, opacity: 0.7 }}>{unreadCount}</span>}</button>
-            ))}
+        <div className="split-pane-rail" style={{ width: 300, borderRight: '1px solid var(--line)', display: 'flex', flexDirection: 'column', background: 'var(--card-warm)' }}>
+          <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--line)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 8, padding: '8px 12px' }}>
+              {Icon.search({ width: 14, height: 14, style: { color: 'var(--muted)' } })}
+              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search messages…" aria-label="Search messages" style={{ border: 'none', background: 'transparent', flex: 1, fontSize: 13 }} />
+            </div>
           </div>
-
-          {/* Threads */}
           <div style={{ flex: 1, overflowY: 'auto' }}>
-            {THREADS.map(t => {
+            {visible.length === 0 && (
+              <EmptyState compact title="No matches" sub="No conversations match your search." />
+            )}
+            {visible.map(t => {
               const c = findClient(t.clientId);
-              const isSelected = t.id === selectedId;
               return (
-                <button key={t.id} onClick={() => handleSelect(t.id)} style={{
-                  width: '100%', textAlign: 'left',
-                  display: 'flex', gap: 12, alignItems: 'flex-start',
-                  padding: '14px 16px',
-                  background: isSelected ? 'var(--paper-2)' : 'transparent',
-                  borderBottom: '1px solid var(--line)',
-                  borderLeft: isSelected ? '3px solid var(--forest)' : '3px solid transparent',
-                }}>
-                  <div style={{ position: 'relative', flexShrink: 0 }}>
-                    <Avatar name={c.name} size={38} />
-                    {t.unread && <div style={{ position: 'absolute', top: 0, right: 0, width: 10, height: 10, borderRadius: '50%', background: 'var(--terracotta)', border: '2px solid var(--card-warm)' }} />}
-                  </div>
+                <button
+                  key={t.id}
+                  onClick={() => selectThread(t.id)}
+                  style={{
+                    width: '100%', textAlign: 'left', padding: '12px 16px',
+                    borderBottom: '1px solid var(--line)',
+                    background: selectedId === t.id ? 'var(--paper-2)' : 'transparent',
+                    display: 'flex', gap: 10, alignItems: 'center',
+                  }}
+                >
+                  <Avatar name={c.name} size={40} />
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 3 }}>
-                      <span style={{ fontSize: 13.5, fontWeight: t.unread ? 600 : 500 }}>{c.name}</span>
-                      <span className="mono" style={{ fontSize: 10, color: 'var(--muted)' }}>{t.t}</span>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: 13.5, fontWeight: 600 }}>{c.name}</span>
+                      <span className="mono" style={{ fontSize: 10, color: 'var(--muted)' }}>{t.time}</span>
                     </div>
-                    <div style={{ fontSize: 12.5, color: t.unread ? 'var(--ink-2)' : 'var(--muted)', fontWeight: t.unread ? 500 : 400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {t.last}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+                      <span style={{ fontSize: 12, color: 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.preview}</span>
+                      {t.unread > 0 && (
+                        <span style={{ background: 'var(--forest)', color: '#fbf6ec', fontSize: 10, fontWeight: 600, borderRadius: 999, minWidth: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 5px' }}>{t.unread}</span>
+                      )}
                     </div>
-                    {t.suggestion && (
-                      <div style={{ marginTop: 6, display: 'inline-flex', alignItems: 'center', gap: 4, background: 'var(--forest-soft)', color: 'var(--forest)', borderRadius: 4, padding: '2px 8px', fontSize: 10, fontWeight: 500 }}>
-                        ✨ {t.suggestion === 'book' ? 'WANTS TO BOOK' : 'ADD-ON OFFER'}
-                      </div>
-                    )}
                   </div>
                 </button>
               );
@@ -119,75 +121,82 @@ export default function InboxScreen() {
         </div>
 
         {/* Conversation */}
-        {showThread && selected && (
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, background: '#f0ece5' }}>
-            {/* Thread header */}
-            <div style={{ padding: '12px 16px', background: 'var(--card)', borderBottom: '1px solid var(--line)', display: 'flex', alignItems: 'center', gap: 12 }}>
-              <button className="show-mobile" onClick={() => setShowThread(false)} style={{ color: 'var(--forest)', padding: 4 }}>
-                {Icon.arrowLeft({ width: 18, height: 18 })}
-              </button>
-              <Avatar name={findClient(selected.clientId).name} size={36} />
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 14, fontWeight: 600 }}>{findClient(selected.clientId).name}</div>
-                <div style={{ fontSize: 11.5, color: 'var(--muted)' }}>via WhatsApp Business</div>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, background: 'var(--paper)' }}>
+          {selected ? (
+            <>
+              <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--line)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--card-warm)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <Avatar name={findClient(selected.clientId).name} size={36} />
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 600 }}>{findClient(selected.clientId).name}</div>
+                    <div style={{ fontSize: 11, color: 'var(--moss)' }}>● online</div>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button aria-label="Call client" style={{ color: 'var(--muted)' }} onClick={() => openLink(`tel:${findClient(selected.clientId).phone || ''}`)}>{Icon.phone({ width: 18, height: 18 })}</button>
+                  <button aria-label="Open in WhatsApp" style={{ color: 'var(--muted)' }} onClick={() => openLink(waLink(findClient(selected.clientId).phone))}>{Icon.cal({ width: 18, height: 18 })}</button>
+                </div>
               </div>
-              <button className="btn btn-secondary btn-sm">{Icon.cal({ width: 13, height: 13 })} Book</button>
-            </div>
 
-            {/* Messages */}
-            <div style={{ flex: 1, overflowY: 'auto', padding: 16, display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {selected.messages.map((m, i) => (
-                <div key={i} style={{ display: 'flex', justifyContent: m.from === 'us' ? 'flex-end' : 'flex-start' }}>
-                  <div style={{
-                    maxWidth: '72%', padding: '9px 12px', borderRadius: m.from === 'us' ? '14px 14px 4px 14px' : '14px 14px 14px 4px',
-                    background: m.from === 'us' ? '#005c4b' : '#fff',
-                    color: m.from === 'us' ? '#e9edef' : '#1a201d',
-                    fontSize: 13.5, lineHeight: 1.5, boxShadow: '0 1px 2px rgba(0,0,0,0.08)',
+              <div style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {selected.messages.map((m, i) => (
+                  <div key={i} style={{
+                    alignSelf: m.from === 'me' ? 'flex-end' : 'flex-start',
+                    maxWidth: '70%', padding: '10px 14px', borderRadius: 14,
+                    background: m.from === 'me' ? 'var(--forest)' : 'var(--card)',
+                    color: m.from === 'me' ? '#fbf6ec' : 'var(--ink)',
+                    border: m.from === 'me' ? 'none' : '1px solid var(--line)',
+                    fontSize: 13.5, lineHeight: 1.4,
                   }}>
-                    {m.body}
-                    <div style={{ fontSize: 10, color: m.from === 'us' ? '#aebac1' : 'var(--muted)', marginTop: 3, textAlign: 'right' }}>
-                      {m.t}
+                    {m.text}
+                    <div style={{ fontSize: 9.5, marginTop: 4, opacity: 0.6 }}>{m.time}</div>
+                  </div>
+                ))}
+              </div>
+
+              {ai && !dismissedAI[selectedId] && (
+                <div style={{ padding: '0 20px 12px' }}>
+                  <div style={{ background: 'var(--card)', border: '1px solid var(--ochre)', borderRadius: 12, padding: '12px 14px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                      {Icon.sparkle({ width: 12, height: 12, style: { color: 'var(--ochre)' } })}
+                      <span className="mono" style={{ fontSize: 10, color: 'var(--ochre)', letterSpacing: '0.08em' }}>AI SUGGESTION · {ai.tone}</span>
+                    </div>
+                    <div style={{ fontSize: 13, lineHeight: 1.5, marginBottom: 10 }}>{ai.reply}</div>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <button onClick={() => setDraft(ai.reply)} className="btn btn-primary btn-sm">Use this reply</button>
+                      <button onClick={() => setDismissedAI(d => ({ ...d, [selectedId]: true }))} className="btn btn-ghost btn-sm">Dismiss</button>
                     </div>
                   </div>
                 </div>
-              ))}
-            </div>
+              )}
 
-            {/* AI suggestion */}
-            {suggestion && (
-              <div style={{ padding: '10px 14px', background: 'var(--card)', borderTop: '1px solid var(--line)' }}>
-                <div style={{ display: 'flex', gap: 8, marginBottom: 8, alignItems: 'center' }}>
-                  <div className="mono" style={{ fontSize: 9.5, color: 'var(--terracotta)', letterSpacing: '0.08em' }}>✨ AI SUGGESTION · {suggestion.intent.toUpperCase()}</div>
-                </div>
-                <div style={{ background: 'var(--paper-2)', borderRadius: 8, padding: '10px 12px', fontSize: 13, lineHeight: 1.5, color: 'var(--ink-2)', marginBottom: 8, fontStyle: 'italic', borderLeft: '3px solid var(--terracotta)' }}>
-                  {suggestion.reply.replace('{name}', findClient(selected.clientId).name?.split(' ')[0])}
-                </div>
-                <div style={{ display: 'flex', gap: 6 }}>
-                  <button onClick={() => setDraft(suggestion.reply.replace('{name}', findClient(selected.clientId).name?.split(' ')[0]))} className="btn btn-primary btn-sm">Use this reply</button>
-                  <button className="btn btn-secondary btn-sm">{Icon.cal({ width: 12, height: 12 })} Offer a slot</button>
-                </div>
+              <div style={{ padding: '12px 20px', borderTop: '1px solid var(--line)', background: 'var(--card-warm)', display: 'flex', gap: 10, alignItems: 'center' }}>
+                <input
+                  value={draft}
+                  onChange={e => setDraft(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
+                  placeholder="Type a message…"
+                  aria-label="Message"
+                  style={{ flex: 1, border: '1px solid var(--line)', borderRadius: 999, padding: '10px 16px', background: 'var(--card)', fontSize: 13.5 }}
+                />
+                <button
+                  onClick={send}
+                  disabled={!draft.trim()}
+                  aria-label="Send message"
+                  style={{
+                    width: 40, height: 40, borderRadius: '50%', background: 'var(--forest)',
+                    color: '#fbf6ec', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                    opacity: draft.trim() ? 1 : 0.5,
+                  }}
+                >
+                  {Icon.send({ width: 18, height: 18 })}
+                </button>
               </div>
-            )}
-
-            {/* Compose */}
-            <div style={{ padding: '10px 14px', background: 'var(--card)', borderTop: '1px solid var(--line)', display: 'flex', gap: 10, alignItems: 'flex-end' }}>
-              <textarea
-                value={draft}
-                onChange={e => setDraft(e.target.value)}
-                placeholder="Reply…"
-                rows={2}
-                style={{
-                  flex: 1, resize: 'none', padding: '10px 12px',
-                  background: 'var(--paper-2)', border: '1px solid var(--line)',
-                  borderRadius: 10, fontSize: 13.5, lineHeight: 1.5,
-                }}
-              />
-              <button className="btn btn-primary" style={{ padding: '10px 16px', borderRadius: 10 }}>
-                {Icon.whatsapp({ width: 16, height: 16 })}
-              </button>
-            </div>
-          </div>
-        )}
+            </>
+          ) : (
+            <EmptyState title="No conversation selected" sub="Pick a thread to start messaging." />
+          )}
+        </div>
       </div>
     </DashboardShell>
   );
