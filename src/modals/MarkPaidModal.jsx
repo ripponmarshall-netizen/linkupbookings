@@ -3,6 +3,7 @@ import ModalShell from '../components/ModalShell.jsx';
 import { Icon, Avatar } from '../components/shared.jsx';
 import { useApp } from '../context/AppContext.jsx';
 import { fmtTime, fmtJ } from '../data/seed.js';
+import { useToast } from '../components/Toast.jsx';
 
 export default function MarkPaidModal({ appt, onClose }) {
   const { markPaid, clients, services } = useApp();
@@ -12,8 +13,10 @@ export default function MarkPaidModal({ appt, onClose }) {
   const s = services.find(service => service.id === a?.serviceId) || {};
   const balance = (s.price || 0) - (a?.deposit || 0);
 
+  const { toast } = useToast();
   const [method, setMethod] = useState('cash');
   const [tip, setTip] = useState(0);
+  const [receipt, setReceipt] = useState(true);
   const total = balance + tip;
 
   const methods = [
@@ -27,6 +30,7 @@ export default function MarkPaidModal({ appt, onClose }) {
     if (a?.id) {
       markPaid(a.id, method, tip);
     }
+    toast(`${fmtJ(total)} collected${receipt && c.name ? ` · receipt sent to ${c.name.split(' ')[0]}` : ''}`, { tone: 'success' });
     onClose();
   }
 
@@ -133,7 +137,7 @@ export default function MarkPaidModal({ appt, onClose }) {
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
       }}>
         <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--ink-2)' }}>
-          <input type="checkbox" defaultChecked /> SMS receipt to {c.name?.split(' ')[0]}
+          <input type="checkbox" checked={receipt} onChange={e => setReceipt(e.target.checked)} style={{ accentColor: 'var(--forest)' }} /> SMS receipt to {c.name?.split(' ')[0]}
         </label>
         <button className="btn btn-primary btn-sm" onClick={handleMarkPaid}>
           {Icon.check({ width: 13, height: 13 })} Mark paid · {fmtJ(total)}

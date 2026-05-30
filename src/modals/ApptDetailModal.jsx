@@ -2,14 +2,29 @@ import ModalShell from '../components/ModalShell.jsx';
 import { Icon } from '../components/shared.jsx';
 import { useApp } from '../context/AppContext.jsx';
 import { fmtTime, fmtJ, DAYS, DAY_DATES } from '../data/seed.js';
+import { useToast } from '../components/Toast.jsx';
+import { openLink, waLink } from '../utils/actions.js';
 
 export default function ApptDetailModal({ appt, onClose }) {
-  const { clients, services, removeAppt } = useApp();
+  const { clients, services, removeAppt, updateAppt } = useApp();
+  const { toast } = useToast();
   const c = clients.find(client => client.id === appt.clientId) || {};
   const s = services.find(service => service.id === appt.serviceId) || {};
 
   const handleDelete = () => {
     removeAppt(appt.id);
+    toast(`${c.name || 'Appointment'} cancelled`);
+    onClose();
+  };
+
+  const handleMessage = () => {
+    openLink(waLink(c.phone, `Hi ${c.name?.split(' ')[0] || ''}! Just confirming your ${s.name || 'appointment'}.`));
+  };
+
+  const handleConfirm = () => {
+    const next = appt.status === 'confirmed' ? 'pending' : 'confirmed';
+    updateAppt(appt.id, { status: next });
+    toast(next === 'confirmed' ? 'Appointment confirmed' : 'Marked as pending', { tone: next === 'confirmed' ? 'success' : 'default' });
     onClose();
   };
 
@@ -73,11 +88,11 @@ export default function ApptDetailModal({ appt, onClose }) {
         )}
 
         <div style={{ display: 'flex', gap: 6 }}>
-          <button className="btn btn-secondary btn-sm" style={{ flex: 1 }}>
+          <button className="btn btn-secondary btn-sm" style={{ flex: 1 }} onClick={handleMessage}>
             {Icon.whatsapp({ width: 13, height: 13 })} Message
           </button>
-          <button className="btn btn-secondary btn-sm" style={{ flex: 1 }}>
-            {Icon.pencil({ width: 13, height: 13 })} Edit
+          <button className="btn btn-secondary btn-sm" style={{ flex: 1 }} onClick={handleConfirm}>
+            {Icon.check({ width: 13, height: 13 })} {appt.status === 'confirmed' ? 'Unconfirm' : 'Confirm'}
           </button>
           <button className="btn btn-secondary btn-sm" onClick={handleDelete} style={{ padding: '6px 10px' }}>
             {Icon.trash({ width: 13, height: 13, style: { color: 'var(--terracotta)' } })}

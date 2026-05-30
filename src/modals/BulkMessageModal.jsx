@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import ModalShell from '../components/ModalShell.jsx';
 import { Icon } from '../components/shared.jsx';
 import { fmtJ } from '../data/seed.js';
+import { useToast } from '../components/Toast.jsx';
+import { insertToken } from '../utils/actions.js';
 
 const PRESETS = [
   { k: 'lapsed',    l: 'Win back lapsed clients',    sub: "8 haven't booked in 60 days", n: 8,  body: 'Hey {first_name}! Mi miss yuh 💚 Been a min — want to come back in? 20% off yuh next gel set this week.' },
@@ -13,9 +15,33 @@ const PRESETS = [
 ];
 
 export default function BulkMessageModal({ onClose }) {
+  const { toast } = useToast();
   const [preset, setPreset] = useState('lapsed');
   const [channel, setChannel] = useState('whatsapp');
+  const [schedule, setSchedule] = useState('Send now');
   const cur = PRESETS.find(p => p.k === preset);
+  const [body, setBody] = useState(cur.body);
+  const taRef = useRef(null);
+
+  // Switching preset loads that preset's copy into the editable body.
+  useEffect(() => { setBody(cur.body); }, [preset]);
+
+  function addToken(token) {
+    const el = taRef.current;
+    const start = el ? el.selectionStart : body.length;
+    const end = el ? el.selectionEnd : body.length;
+    setBody(insertToken(body, token, start, end));
+    requestAnimationFrame(() => {
+      if (el) { el.focus(); const pos = start + token.length; el.setSelectionRange(pos, pos); }
+    });
+  }
+
+  function send() {
+    toast(schedule === 'Send now'
+      ? `Sending to ${cur.n} clients…`
+      : `Scheduled for ${cur.n} clients · ${schedule}`, { tone: 'success' });
+    onClose();
+  }
 
   return (
     <ModalShell onClose={onClose} width={840}>
@@ -83,10 +109,12 @@ export default function BulkMessageModal({ onClose }) {
 
           <label className="label" style={{ marginBottom: 8 }}>Message</label>
           <textarea
-            key={preset}
-            defaultValue={cur.body}
+            ref={taRef}
+            value={body}
+            onChange={e => setBody(e.target.value)}
             rows="6"
             placeholder="Hey {first_name}…"
+            aria-label="Bulk message"
             style={{
               width: '100%', padding: 14,
               background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 10,
@@ -97,20 +125,21 @@ export default function BulkMessageModal({ onClose }) {
           <div className="label" style={{ marginTop: 14, marginBottom: 8 }}>Variables</div>
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
             {['{first_name}', '{service}', '{last_visit}', '{booking_link}', '{date}'].map(v => (
-              <button key={v} className="chip mono" style={{ fontSize: 10.5, padding: '4px 10px' }}>{v}</button>
+              <button key={v} onClick={() => addToken(v)} className="chip mono" style={{ fontSize: 10.5, padding: '4px 10px', cursor: 'pointer' }}>{v}</button>
             ))}
           </div>
 
           <div className="label" style={{ marginTop: 18, marginBottom: 8 }}>Schedule</div>
           <div style={{ display: 'flex', gap: 6 }}>
-            {['Send now', 'Tomorrow 9am', 'Friday 5pm', 'Custom…'].map((s, i) => (
+            {['Send now', 'Tomorrow 9am', 'Friday 5pm', 'Custom…'].map((s) => (
               <button
-                key={i}
+                key={s}
+                onClick={() => setSchedule(s)}
                 className="chip"
                 style={{
-                  background: i === 0 ? 'var(--forest-soft)' : 'var(--card)',
-                  color: i === 0 ? 'var(--forest)' : 'var(--ink-2)',
-                  border: `1px solid ${i === 0 ? '#cad6c9' : 'var(--line)'}`,
+                  background: schedule === s ? 'var(--forest-soft)' : 'var(--card)',
+                  color: schedule === s ? 'var(--forest)' : 'var(--ink-2)',
+                  border: `1px solid ${schedule === s ? '#cad6c9' : 'var(--line)'}`,
                   cursor: 'pointer',
                 }}
               >
@@ -137,7 +166,7 @@ export default function BulkMessageModal({ onClose }) {
               background: '#005c4b', color: '#e9edef',
               padding: '8px 12px', borderRadius: 8, fontSize: 12.5, lineHeight: 1.45,
             }}>
-              {(cur.body || 'Yuh message…').replace('{first_name}', 'Aaliyah')}
+              {(body || 'Yuh message…').replace('{first_name}', 'Aaliyah')}
               <div style={{ fontSize: 9.5, color: '#aebac1', textAlign: 'right', marginTop: 4 }}>11:42 AM ✓✓</div>
             </div>
           </div>
@@ -174,8 +203,8 @@ export default function BulkMessageModal({ onClose }) {
         <span className="mono" style={{ fontSize: 10.5, color: 'var(--muted)' }}>
           {cur.n} RECIPIENTS · OPT-OUT FOOTER AUTO-ATTACHED
         </span>
-        <button className="btn btn-terracotta btn-sm" onClick={onClose}>
-          {Icon.whatsapp({ width: 13, height: 13 })} Send to {cur.n} clients
+        <button className="btn btn-terracotta btn-sm" onClick={send}>
+          {Icon.whatsapp({ width: 13, height: 13 })} {schedule === 'Send now' ? 'Send to' : 'Schedule for'} {cur.n} clients
         </button>
       </div>
     </ModalShell>
