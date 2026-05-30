@@ -123,8 +123,14 @@ export default function ClientsScreen() {
 }
 
 function ClientDetail({ client, appts, services, isPro, onBack }) {
+  const { updateClient } = useApp();
   const [tab, setTab] = useState('overview');
+  const [notes, setNotes] = useState(client.notes || '');
   const history = appts.filter(a => a.clientId === client.id);
+
+  const saveNotes = () => {
+    if (notes !== (client.notes || '')) updateClient(client.id, { notes });
+  };
 
   return (
     <div>

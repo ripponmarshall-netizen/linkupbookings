@@ -23,6 +23,7 @@ export default function App() {
   return (
     <BrowserRouter basename={basename || undefined}>
       <AppProvider>
+       <ToastProvider>
         <Routes>
           <Route path="/" element={<LandingScreen />} />
           <Route path="/onboarding" element={<OnboardingScreen />} />
@@ -42,6 +43,7 @@ export default function App() {
           <Route path="/referral" element={<ReferralScreen />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+       </ToastProvider>
       </AppProvider>
     </BrowserRouter>
   );
