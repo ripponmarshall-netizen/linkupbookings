@@ -49,8 +49,8 @@ export default function ShareLinkModal({ onClose }) {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 24 }}>
           {[
             { l: 'WhatsApp', i: Icon.whatsapp },
-            { l: 'Instagram', i: Icon.instagram },
-            { l: 'Facebook', i: Icon.share },
+            { l: 'Instagram', i: Icon.globe },
+            { l: 'Facebook', i: Icon.users },
             { l: 'SMS', i: Icon.msg },
           ].map(({ l, i }) => (
             <button key={l} onClick={() => shareTo(l)} style={{
