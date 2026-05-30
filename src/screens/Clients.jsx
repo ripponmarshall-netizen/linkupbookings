@@ -109,6 +109,7 @@ export default function ClientsScreen() {
         {showDetail && selected && (
           <div className="clients-detail-pane" style={{ flex: 1, overflowY: 'auto', background: 'var(--card-warm)', minWidth: 0 }}>
             <ClientDetail
+              key={selected.id}
               client={selected}
               appts={appts}
               services={services}
