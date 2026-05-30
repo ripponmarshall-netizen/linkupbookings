@@ -2,6 +2,10 @@ import React from 'react';
 import DashboardShell from '../components/DashboardShell.jsx';
 import { Icon, Avatar } from '../components/shared.jsx';
 import { findClient, findService, fmtJ } from '../data/seed.js';
+import { useToast } from '../components/Toast.jsx';
+import { openLink, waLink, smsLink } from '../utils/actions.js';
+
+const WaitlistContext = React.createContext(null);
 
 const WAITLIST = [
   {
@@ -42,16 +46,45 @@ const WAITLIST = [
 ];
 
 export default function WaitlistScreen() {
+  const { toast } = useToast();
   const [autoFill, setAutoFill] = React.useState(true);
   const [tab, setTab] = React.useState('queue');
-  const matchedCount = WAITLIST.filter(w => w.matched).length;
+  const [list, setList] = React.useState(WAITLIST);
+  const matchedCount = list.filter(w => w.matched).length;
+
+  const removeFromList = (id) => setList(l => l.filter(w => w.id !== id));
+
+  const offerSlot = (w) => {
+    const c = findClient(w.clientId);
+    openLink(waLink(c.phone, `Hi ${c.name?.split(' ')[0] || ''}! A slot opened up: ${w.matched?.slot || w.wants}. Want it? Reply to confirm 💚`));
+    toast(`Offer sent to ${c.name?.split(' ')[0] || 'client'}`, { tone: 'success' });
+    removeFromList(w.id);
+  };
+
+  const messageWaiter = (w) => {
+    const c = findClient(w.clientId);
+    openLink((w.notify === 'sms' ? smsLink : waLink)(c.phone, `Hi ${c.name?.split(' ')[0] || ''}! Just checking in about your waitlist request.`));
+  };
+
+  const addToWaitlist = () => {
+    const existing = new Set(list.map(w => w.clientId));
+    const candidate = ['c4', 'c2', 'c1', 'c5', 'c6', 'c3'].find(id => !existing.has(id)) || 'c1';
+    const newEntry = {
+      id: 'w' + Date.now(), clientId: candidate, service: 's1',
+      priority: list.length + 1, wants: 'Any slot this week', addedDays: 0,
+      flexible: 'any', notify: 'whatsapp', note: '', matched: null,
+    };
+    setList(l => [...l, newEntry]);
+    toast(`${findClient(candidate).name?.split(' ')[0] || 'Client'} added to the waitlist`, { tone: 'success' });
+  };
 
   return (
+    <WaitlistContext.Provider value={{ list, offerSlot, messageWaiter, removeFromList }}>
     <DashboardShell
       title="Waitlist"
-      sub={`${WAITLIST.length} people waiting · ${matchedCount} ready to offer`}
+      sub={`${list.length} people waiting · ${matchedCount} ready to offer`}
       action={
-        <button className="btn btn-primary btn-sm">
+        <button className="btn btn-primary btn-sm" onClick={addToWaitlist}>
           {Icon.plus({ width: 13, height: 13 })} Add to waitlist
         </button>
       }
@@ -59,7 +92,7 @@ export default function WaitlistScreen() {
       {/* tabs */}
       <div className="tab-bar" style={{ gap: 4, alignItems: 'stretch' }}>
         {[
-          ['queue', `Queue · ${WAITLIST.length}`],
+          ['queue', `Queue · ${list.length}`],
           ['rules', 'Auto-fill rules'],
         ].map(([k, l]) => (
           <button key={k} onClick={() => setTab(k)}
@@ -76,10 +109,14 @@ export default function WaitlistScreen() {
         ? <WaitlistQueue autoFill={autoFill} setAutoFill={setAutoFill} />
         : <WaitlistRules />}
     </DashboardShell>
+    </WaitlistContext.Provider>
   );
 }
 
 function WaitlistQueue({ autoFill, setAutoFill }) {
+  const { list } = React.useContext(WaitlistContext);
+  const matched = list.filter(w => w.matched);
+  const waiting = list.filter(w => !w.matched);
   return (
     <div style={{ flex: 1, overflow: 'auto', padding: '24px 32px', background: 'var(--paper)' }}>
       {/* Auto-fill banner */}
@@ -123,25 +160,28 @@ function WaitlistQueue({ autoFill, setAutoFill }) {
       </div>
 
       {/* matched callout */}
-      {WAITLIST.filter(w => w.matched).length > 0 && (
+      {matched.length > 0 && (
         <>
           <div className="label" style={{ marginBottom: 10 }}>
-            Ready to offer · {WAITLIST.filter(w => w.matched).length}
+            Ready to offer · {matched.length}
           </div>
-          {WAITLIST.filter(w => w.matched).map(w => <WaitlistRow key={w.id} w={w} />)}
+          {matched.map(w => <WaitlistRow key={w.id} w={w} />)}
         </>
       )}
 
       {/* full queue */}
       <div className="label" style={{ marginTop: 22, marginBottom: 10 }}>
-        Waiting · {WAITLIST.filter(w => !w.matched).length}
+        Waiting · {waiting.length}
       </div>
-      {WAITLIST.filter(w => !w.matched).map(w => <WaitlistRow key={w.id} w={w} />)}
+      {waiting.length === 0
+        ? <div style={{ fontSize: 12.5, color: 'var(--muted)', fontStyle: 'italic', padding: '8px 0' }}>Nobody waiting right now.</div>
+        : waiting.map(w => <WaitlistRow key={w.id} w={w} />)}
     </div>
   );
 }
 
 function WaitlistRow({ w }) {
+  const { offerSlot, messageWaiter, removeFromList } = React.useContext(WaitlistContext);
   const c = findClient(w.clientId);
   const s = findService(w.service);
   const matched = !!w.matched;
@@ -195,35 +235,41 @@ function WaitlistRow({ w }) {
         <span style={{ fontSize: 11.5, fontWeight: 500 }}>{fmtJ(s.price)}</span>
       </div>
       {matched ? (
-        <button className="btn btn-primary btn-sm">
+        <button className="btn btn-primary btn-sm" onClick={() => offerSlot(w)}>
           {Icon.whatsapp({ width: 12, height: 12 })} Offer slot
         </button>
       ) : (
         <div style={{ display: 'flex', gap: 4 }}>
-          <button className="btn btn-secondary btn-sm" style={{ padding: '6px 10px' }}>
+          <button className="btn btn-secondary btn-sm" style={{ padding: '6px 10px' }} aria-label={`Message ${c.name}`} onClick={() => messageWaiter(w)}>
             {Icon.whatsapp({ width: 12, height: 12 })}
           </button>
-          <button style={{ color: 'var(--muted-2)', padding: 6 }}>{Icon.x({ width: 14, height: 14 })}</button>
+          <button style={{ color: 'var(--muted-2)', padding: 6 }} aria-label={`Remove ${c.name} from waitlist`} onClick={() => removeFromList(w.id)}>{Icon.x({ width: 14, height: 14 })}</button>
         </div>
       )}
     </div>
   );
 }
 
+const RULE_DEFS = [
+  ['Notify first match in queue', true, 'Top priority gets offered first'],
+  ['Auto-confirm if booked within 30 min', false, 'Otherwise offer next in queue'],
+  ['Allow chain offers', true, 'If first declines, ping second, third…'],
+  ['Match by service preference', true, 'Only ping people who want this service'],
+  ['Respect flexibility window', true, '"Weekends only" never gets a weekday'],
+];
+
 function WaitlistRules() {
+  const [rules, setRules] = React.useState(() => RULE_DEFS.map(([, on]) => on));
+  const toggle = (i) => setRules(r => r.map((v, j) => j === i ? !v : v));
   return (
     <div style={{ flex: 1, overflow: 'auto', padding: '24px 32px', background: 'var(--paper)' }}>
       <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 24, maxWidth: 1100 }}>
         <div>
           <div className="label" style={{ marginBottom: 12 }}>When a slot opens up</div>
           <div style={{ background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 12, padding: 4 }}>
-            {[
-              ['Notify first match in queue', true, 'Top priority gets offered first'],
-              ['Auto-confirm if booked within 30 min', false, 'Otherwise offer next in queue'],
-              ['Allow chain offers', true, 'If first declines, ping second, third…'],
-              ['Match by service preference', true, 'Only ping people who want this service'],
-              ['Respect flexibility window', true, '"Weekends only" never gets a weekday'],
-            ].map(([l, on, sub], i) => (
+            {RULE_DEFS.map(([l, , sub], i) => {
+              const on = rules[i];
+              return (
               <div key={i} style={{
                 display: 'flex', alignItems: 'center', gap: 12,
                 padding: '14px 16px',
@@ -233,18 +279,23 @@ function WaitlistRules() {
                   <div style={{ fontSize: 13, fontWeight: 500 }}>{l}</div>
                   <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>{sub}</div>
                 </div>
-                <div style={{
-                  width: 38, height: 22, borderRadius: 11,
-                  background: on ? 'var(--forest)' : 'var(--line-2)',
-                  position: 'relative',
-                }}>
+                <button
+                  onClick={() => toggle(i)}
+                  aria-label={`${on ? 'Disable' : 'Enable'}: ${l}`}
+                  style={{
+                    width: 38, height: 22, borderRadius: 11,
+                    background: on ? 'var(--forest)' : 'var(--line-2)',
+                    position: 'relative', flexShrink: 0,
+                  }}>
                   <div style={{
                     position: 'absolute', top: 2, left: on ? 18 : 2,
                     width: 18, height: 18, borderRadius: '50%', background: '#fbf6ec',
+                    transition: 'left 120ms',
                   }} />
-                </div>
+                </button>
               </div>
-            ))}
+              );
+            })}
           </div>
 
           <div className="label" style={{ marginBottom: 12, marginTop: 24 }}>Auto-offer template</div>

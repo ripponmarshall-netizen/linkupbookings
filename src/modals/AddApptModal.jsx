@@ -4,24 +4,47 @@ import { Icon, Avatar } from '../components/shared.jsx';
 import { useApp } from '../context/AppContext.jsx';
 import { DAYS, DAY_DATES, fmtJ } from '../data/seed.js';
 
+const TIME_MAP = {
+  '9:00am': 9, '10:00am': 10, '11:00am': 11,
+  '12:00pm': 12, '1:30pm': 13.5, '3:00pm': 15,
+  '4:30pm': 16.5, '6:00pm': 18,
+};
+const TIMES = ['9:00am', '10:00am', '11:00am', '12:00pm', '1:30pm', '3:00pm', '4:30pm', '6:00pm'];
+
 export default function AddApptModal({ onClose }) {
-  const { addAppt, clients, services } = useApp();
+  const { addAppt, addClient, clients, services } = useApp();
   const [step, setStep] = useState(1);
   const [client, setClient] = useState(null);
   const [service, setService] = useState(services[0]);
   const [dayIdx, setDayIdx] = useState(1);
   const [time, setTime] = useState('11:00am');
   const [requireDeposit, setRequireDeposit] = useState(true);
+  const [query, setQuery] = useState('');
+  const [note, setNote] = useState('');
+
+  const q = query.trim().toLowerCase();
+  const matches = (q
+    ? clients.filter(c => c.name.toLowerCase().includes(q) || (c.phone || '').includes(q))
+    : clients
+  ).slice(0, 5);
+
+  function handleAddNew() {
+    const name = query.trim();
+    if (!name) return;
+    const newClient = {
+      id: 'c' + Date.now(), name, phone: '', email: '',
+      visits: 0, lifetime: 0, last: 'never', tags: ['New'], notes: '',
+    };
+    addClient(newClient);
+    setClient(newClient);
+    setQuery('');
+    setStep(2);
+  }
 
   function handleConfirm() {
-    // Map display time to a decimal hour (9.5 = 9:30am) to match seed data
-    const timeMap = {
-      '9:00am': 9, '10:00am': 10, '11:00am': 11,
-      '12:00pm': 12, '1:30pm': 13.5, '3:00pm': 15,
-      '4:30pm': 16.5, '6:00pm': 18,
-    };
     if (!client || !service) return;
-    const start = timeMap[time] ?? 11;
+    // Map display time to a decimal hour (9.5 = 9:30am) to match seed data
+    const start = TIME_MAP[time] ?? 11;
     const end = start + service.duration / 60;
 
     addAppt({
@@ -35,6 +58,7 @@ export default function AddApptModal({ onClose }) {
       deposit: requireDeposit ? Math.round(service.price * 0.25) : 0,
       paid: false,
       recurring: false,
+      note: note.trim(),
     });
     onClose();
   }
@@ -44,7 +68,7 @@ export default function AddApptModal({ onClose }) {
       <div style={{ padding: '20px 24px 14px', borderBottom: '1px solid var(--line)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
           <div className="label">New appointment</div>
-          <button onClick={onClose} style={{ color: 'var(--muted)' }}>
+          <button onClick={onClose} aria-label="Close" style={{ color: 'var(--muted)' }}>
             {Icon.x({ width: 16, height: 16 })}
           </button>
         </div>
@@ -65,17 +89,30 @@ export default function AddApptModal({ onClose }) {
                 {Icon.search({ width: 14, height: 14, style: { color: 'var(--muted)' } })}
                 <input
                   className="mono"
+                  value={query}
+                  onChange={e => setQuery(e.target.value)}
                   placeholder="Search clients or add new..."
+                  aria-label="Search clients"
                   style={{ border: 'none', background: 'transparent', flex: 1, padding: 0, fontSize: 13 }}
                 />
-                <button className="btn btn-ghost btn-sm" style={{ padding: '4px 8px', fontSize: 11.5 }}>
+                <button
+                  className="btn btn-ghost btn-sm"
+                  style={{ padding: '4px 8px', fontSize: 11.5 }}
+                  onClick={handleAddNew}
+                  disabled={!query.trim()}
+                >
                   {Icon.plus({ width: 12, height: 12 })} New
                 </button>
               </div>
             </div>
-            <div className="label" style={{ marginBottom: 8 }}>Recent</div>
+            <div className="label" style={{ marginBottom: 8 }}>{q ? 'Matches' : 'Recent'}</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              {clients.slice(0, 5).map(c => (
+              {matches.length === 0 && (
+                <div style={{ fontSize: 12.5, color: 'var(--muted)', fontStyle: 'italic', padding: '6px 0' }}>
+                  No clients match — tap <strong>New</strong> to add "{query.trim()}".
+                </div>
+              )}
+              {matches.map(c => (
                 <button
                   key={c.id}
                   onClick={() => { setClient(c); setStep(2); }}
@@ -84,8 +121,6 @@ export default function AddApptModal({ onClose }) {
                     padding: 10, borderRadius: 10, textAlign: 'left',
                     background: client?.id === c.id ? 'var(--paper-2)' : 'transparent',
                   }}
-                  onMouseEnter={e => e.currentTarget.style.background = 'var(--paper-2)'}
-                  onMouseLeave={e => e.currentTarget.style.background = client?.id === c.id ? 'var(--paper-2)' : 'transparent'}
                 >
                   <Avatar name={c.name} size={32} />
                   <div style={{ flex: 1 }}>
@@ -150,7 +185,7 @@ export default function AddApptModal({ onClose }) {
             <div style={{ marginBottom: 16 }}>
               <label className="label">Time</label>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6 }}>
-                {['9:00am', '10:00am', '11:00am', '12:00pm', '1:30pm', '3:00pm', '4:30pm', '6:00pm'].map(t => (
+                {TIMES.map(t => (
                   <button
                     key={t}
                     onClick={() => setTime(t)}
@@ -181,6 +216,7 @@ export default function AddApptModal({ onClose }) {
                 </div>
                 <button
                   onClick={() => setRequireDeposit(!requireDeposit)}
+                  aria-label="Toggle require deposit"
                   style={{
                     width: 38, height: 22, borderRadius: 11,
                     background: requireDeposit ? 'var(--forest)' : 'var(--line-2)',
@@ -198,8 +234,16 @@ export default function AddApptModal({ onClose }) {
             </div>
 
             <div>
-              <label className="label">Note for this booking</label>
-              <textarea className="textarea" rows="2" placeholder="Optional…" style={{ resize: 'none' }} />
+              <label className="label" htmlFor="appt-note">Note for this booking</label>
+              <textarea
+                id="appt-note"
+                className="textarea"
+                rows="2"
+                value={note}
+                onChange={e => setNote(e.target.value)}
+                placeholder="Optional…"
+                style={{ resize: 'none' }}
+              />
             </div>
           </>
         )}

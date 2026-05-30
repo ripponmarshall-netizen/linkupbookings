@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AppProvider } from './context/AppContext.jsx';
+import { ToastProvider } from './components/Toast.jsx';
 
 import LandingScreen from './screens/Landing.jsx';
 import OnboardingScreen from './screens/Onboarding.jsx';
@@ -22,6 +23,7 @@ export default function App() {
   return (
     <BrowserRouter basename={basename || undefined}>
       <AppProvider>
+       <ToastProvider>
         <Routes>
           <Route path="/" element={<LandingScreen />} />
           <Route path="/onboarding" element={<OnboardingScreen />} />
@@ -41,6 +43,7 @@ export default function App() {
           <Route path="/referral" element={<ReferralScreen />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+       </ToastProvider>
       </AppProvider>
     </BrowserRouter>
   );

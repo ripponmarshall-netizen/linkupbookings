@@ -109,6 +109,7 @@ export default function ClientsScreen() {
         {showDetail && selected && (
           <div className="clients-detail-pane" style={{ flex: 1, overflowY: 'auto', background: 'var(--card-warm)', minWidth: 0 }}>
             <ClientDetail
+              key={selected.id}
               client={selected}
               appts={appts}
               services={services}
@@ -123,8 +124,14 @@ export default function ClientsScreen() {
 }
 
 function ClientDetail({ client, appts, services, isPro, onBack }) {
+  const { updateClient } = useApp();
   const [tab, setTab] = useState('overview');
+  const [notes, setNotes] = useState(client.notes || '');
   const history = appts.filter(a => a.clientId === client.id);
+
+  const saveNotes = () => {
+    if (notes !== (client.notes || '')) updateClient(client.id, { notes });
+  };
 
   return (
     <div>
@@ -230,7 +237,9 @@ function ClientDetail({ client, appts, services, isPro, onBack }) {
         {tab === 'notes' && (
           <div>
             <textarea
-              defaultValue={client.notes}
+              value={notes}
+              onChange={e => setNotes(e.target.value)}
+              onBlur={saveNotes}
               placeholder="Add notes about this client…"
               style={{
                 width: '100%', minHeight: 140, padding: '12px 14px',
