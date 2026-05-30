@@ -230,7 +230,9 @@ function ClientDetail({ client, appts, services, isPro, onBack }) {
         {tab === 'notes' && (
           <div>
             <textarea
-              defaultValue={client.notes}
+              value={notes}
+              onChange={e => setNotes(e.target.value)}
+              onBlur={saveNotes}
               placeholder="Add notes about this client…"
               style={{
                 width: '100%', minHeight: 140, padding: '12px 14px',

@@ -5,13 +5,34 @@ import { useApp } from '../context/AppContext.jsx';
 import { DAYS, DAY_DATES, fmtJ } from '../data/seed.js';
 
 export default function AddApptModal({ onClose }) {
-  const { addAppt, clients, services } = useApp();
+  const { addAppt, addClient, clients, services } = useApp();
   const [step, setStep] = useState(1);
   const [client, setClient] = useState(null);
   const [service, setService] = useState(services[0]);
   const [dayIdx, setDayIdx] = useState(1);
   const [time, setTime] = useState('11:00am');
   const [requireDeposit, setRequireDeposit] = useState(true);
+  const [query, setQuery] = useState('');
+  const [note, setNote] = useState('');
+
+  const q = query.trim().toLowerCase();
+  const matches = (q
+    ? clients.filter(c => c.name.toLowerCase().includes(q) || (c.phone || '').includes(q))
+    : clients
+  ).slice(0, 5);
+
+  function handleAddNew() {
+    const name = query.trim();
+    if (!name) return;
+    const newClient = {
+      id: 'c' + Date.now(), name, phone: '', email: '',
+      visits: 0, lifetime: 0, lastVisit: 'never', tags: ['New'], notes: '',
+    };
+    addClient(newClient);
+    setClient(newClient);
+    setQuery('');
+    setStep(2);
+  }
 
   function handleConfirm() {
     // Map display time to a decimal hour (9.5 = 9:30am) to match seed data
@@ -35,6 +56,7 @@ export default function AddApptModal({ onClose }) {
       deposit: requireDeposit ? Math.round(service.price * 0.25) : 0,
       paid: false,
       recurring: false,
+      note: note.trim(),
     });
     onClose();
   }
@@ -65,17 +87,30 @@ export default function AddApptModal({ onClose }) {
                 {Icon.search({ width: 14, height: 14, style: { color: 'var(--muted)' } })}
                 <input
                   className="mono"
+                  value={query}
+                  onChange={e => setQuery(e.target.value)}
                   placeholder="Search clients or add new..."
+                  aria-label="Search clients"
                   style={{ border: 'none', background: 'transparent', flex: 1, padding: 0, fontSize: 13 }}
                 />
-                <button className="btn btn-ghost btn-sm" style={{ padding: '4px 8px', fontSize: 11.5 }}>
+                <button
+                  className="btn btn-ghost btn-sm"
+                  style={{ padding: '4px 8px', fontSize: 11.5 }}
+                  onClick={handleAddNew}
+                  disabled={!query.trim()}
+                >
                   {Icon.plus({ width: 12, height: 12 })} New
                 </button>
               </div>
             </div>
-            <div className="label" style={{ marginBottom: 8 }}>Recent</div>
+            <div className="label" style={{ marginBottom: 8 }}>{q ? 'Matches' : 'Recent'}</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              {clients.slice(0, 5).map(c => (
+              {matches.length === 0 && (
+                <div style={{ fontSize: 12.5, color: 'var(--muted)', fontStyle: 'italic', padding: '6px 0' }}>
+                  No clients match — tap <strong>New</strong> to add "{query.trim()}".
+                </div>
+              )}
+              {matches.map(c => (
                 <button
                   key={c.id}
                   onClick={() => { setClient(c); setStep(2); }}
@@ -198,8 +233,16 @@ export default function AddApptModal({ onClose }) {
             </div>
 
             <div>
-              <label className="label">Note for this booking</label>
-              <textarea className="textarea" rows="2" placeholder="Optional…" style={{ resize: 'none' }} />
+              <label className="label" htmlFor="appt-note">Note for this booking</label>
+              <textarea
+                id="appt-note"
+                className="textarea"
+                rows="2"
+                value={note}
+                onChange={e => setNote(e.target.value)}
+                placeholder="Optional…"
+                style={{ resize: 'none' }}
+              />
             </div>
           </>
         )}

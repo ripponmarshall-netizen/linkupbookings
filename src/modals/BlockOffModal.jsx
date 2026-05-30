@@ -12,6 +12,7 @@ export default function BlockOffModal({ onClose }) {
   const [toTime, setToTime] = useState('2:00pm');
   const [reason, setReason] = useState('Lunch break');
   const [recurring, setRecurring] = useState(false);
+  const [clientNote, setClientNote] = useState('');
   const [error, setError] = useState('');
 
   const reasons = [
@@ -36,6 +37,7 @@ export default function BlockOffModal({ onClose }) {
       end: range.end,
       reason,
       recurring,
+      note: clientNote.trim(),
     });
     onClose();
   }
@@ -152,9 +154,12 @@ export default function BlockOffModal({ onClose }) {
           </div>
         </div>
 
-        <label className="label">Note shown to clients (optional)</label>
+        <label className="label" htmlFor="block-client-note">Note shown to clients (optional)</label>
         <input
+          id="block-client-note"
           className="input"
+          value={clientNote}
+          onChange={e => setClientNote(e.target.value)}
           placeholder="e.g. 'back at 2pm' — leave blank to just hide the slot"
         />
       </div>

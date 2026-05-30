@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AppProvider } from './context/AppContext.jsx';
+import { ToastProvider } from './components/Toast.jsx';
 
 import LandingScreen from './screens/Landing.jsx';
 import OnboardingScreen from './screens/Onboarding.jsx';

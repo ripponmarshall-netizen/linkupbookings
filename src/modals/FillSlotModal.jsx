@@ -1,11 +1,23 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import ModalShell from '../components/ModalShell.jsx';
 import { Icon } from '../components/shared.jsx';
+import { useToast } from '../components/Toast.jsx';
+
+const buildMessage = (discount) =>
+  `Hey {first_name}! Mi have an open slot Thu 29th at 3pm — ${discount}% off if yuh grab it 💚 Book here: lup.bk/glow`;
 
 export default function FillSlotModal({ onClose }) {
+  const { toast } = useToast();
   const [segment, setSegment] = useState('regulars');
   const [discount, setDiscount] = useState(15);
   const [channel, setChannel] = useState('whatsapp');
+  const [message, setMessage] = useState(() => buildMessage(15));
+  const [edited, setEdited] = useState(false);
+
+  // Keep the message in sync with the discount until the user edits it by hand.
+  useEffect(() => {
+    if (!edited) setMessage(buildMessage(discount));
+  }, [discount, edited]);
 
   const segments = [
     { k: 'regulars', l: 'Regulars',  n: 12, sub: 'visited 2x+ in 90 days'  },
@@ -14,7 +26,11 @@ export default function FillSlotModal({ onClose }) {
     { k: 'all',      l: 'Everyone',  n: 47, sub: 'all clients'              },
   ];
   const segmentCount = segments.find(s => s.k === segment).n;
-  const message = `Hey {first_name}! Mi have an open slot Thu 29th at 3pm — ${discount}% off if yuh grab it 💚 Book here: lup.bk/glow`;
+
+  function handleSend() {
+    toast(`Offer sent to ${segmentCount} ${channel === 'whatsapp' ? 'WhatsApp' : 'SMS'} clients`, { tone: 'success' });
+    onClose();
+  }
 
   return (
     <ModalShell onClose={onClose} width={780}>
@@ -99,7 +115,8 @@ export default function FillSlotModal({ onClose }) {
 
           <label className="label" style={{ marginBottom: 8 }}>Message</label>
           <textarea
-            defaultValue={message}
+            value={message}
+            onChange={e => { setMessage(e.target.value); setEdited(true); }}
             rows="4"
             style={{
               width: '100%', padding: 12,
@@ -161,7 +178,7 @@ export default function FillSlotModal({ onClose }) {
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
       }}>
         <button className="btn btn-ghost btn-sm" onClick={onClose}>Cancel</button>
-        <button className="btn btn-terracotta btn-sm" onClick={onClose}>
+        <button className="btn btn-terracotta btn-sm" onClick={handleSend}>
           {Icon.sparkle({ width: 13, height: 13 })} Send to {segmentCount} clients
         </button>
       </div>
