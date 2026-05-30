@@ -7,10 +7,10 @@ import { fmtTime, fmtJ } from '../data/seed.js';
 export default function MarkPaidModal({ appt, onClose }) {
   const { markPaid, clients, services } = useApp();
 
-  const a = appt || { id: null, clientId: 'c3', serviceId: 's3', deposit: 1500, start: 11 };
-  const c = clients.find(client => client.id === a.clientId) || {};
-  const s = services.find(service => service.id === a.serviceId) || {};
-  const balance = (s.price || 0) - (a.deposit || 0);
+  const a = appt;
+  const c = clients.find(client => client.id === a?.clientId) || {};
+  const s = services.find(service => service.id === a?.serviceId) || {};
+  const balance = (s.price || 0) - (a?.deposit || 0);
 
   const [method, setMethod] = useState('cash');
   const [tip, setTip] = useState(0);
@@ -24,11 +24,13 @@ export default function MarkPaidModal({ appt, onClose }) {
   ];
 
   function handleMarkPaid() {
-    if (a.id) {
+    if (a?.id) {
       markPaid(a.id, method, tip);
     }
     onClose();
   }
+
+  if (!a) return null;
 
   return (
     <ModalShell onClose={onClose} width={460}>

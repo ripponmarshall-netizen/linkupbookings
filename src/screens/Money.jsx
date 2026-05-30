@@ -4,19 +4,21 @@ import { Icon, Avatar } from '../components/shared.jsx';
 import { useApp } from '../context/AppContext.jsx';
 import { fmtJ, fmtTime } from '../data/seed.js';
 import MarkPaidModal from '../modals/MarkPaidModal.jsx';
+import { clampProgress, findNextUnpaidAppointment } from '../utils/payments.js';
 
 const TODAY_IDX = 1;
 
 export default function MoneyScreen() {
   const { appts, clients, services } = useApp();
   const [tab, setTab] = useState('today');
-  const [modal, setModal] = useState(null);
+  const [paymentAppt, setPaymentAppt] = useState(null);
+  const nextUnpaid = findNextUnpaidAppointment(appts, TODAY_IDX);
 
   const action = (
     <div style={{ display: 'flex', gap: 6 }}>
       <button className="btn btn-secondary btn-sm hide-mobile">Export CSV</button>
       <button className="btn btn-secondary btn-sm hide-mobile">For accountant</button>
-      <button className="btn btn-primary btn-sm" onClick={() => setModal('markpaid')}>
+      <button className="btn btn-primary btn-sm" disabled={!nextUnpaid} onClick={() => setPaymentAppt(nextUnpaid)}>
         {Icon.cash({ width: 13, height: 13 })} Mark paid
       </button>
     </div>
@@ -41,13 +43,13 @@ export default function MoneyScreen() {
         </div>
 
         <div style={{ flex: 1, overflowY: 'auto' }}>
-          {tab === 'today' && <TodayCloseOut appts={appts} clients={clients} services={services} onMarkPaid={() => setModal('markpaid')} />}
+          {tab === 'today' && <TodayCloseOut appts={appts} clients={clients} services={services} onMarkPaid={setPaymentAppt} />}
           {tab === 'week'  && <WeekTakings appts={appts} services={services} />}
           {tab === 'month' && <MonthTakings />}
         </div>
       </DashboardShell>
 
-      {modal === 'markpaid' && <MarkPaidModal onClose={() => setModal(null)} />}
+      {paymentAppt && <MarkPaidModal appt={paymentAppt} onClose={() => setPaymentAppt(null)} />}
     </>
   );
 }
@@ -64,7 +66,7 @@ function TodayCloseOut({ appts, clients, services, onMarkPaid }) {
   const totalTips     = paid.reduce((s, a) => s + (a.tip || 0), 0);
   const expected      = todaysAppts.reduce((s, a) => s + findService(a.serviceId).price, 0);
   const collected     = totalRevenue + totalTips;
-  const pct           = expected > 0 ? (collected / expected) : 0;
+  const pct           = clampProgress(collected, expected);
 
   return (
     <div style={{ padding: '24px', background: 'var(--paper)' }}>
@@ -127,7 +129,7 @@ function TodayCloseOut({ appts, clients, services, onMarkPaid }) {
               {a.paid ? (
                 <span className="chip chip-forest" style={{ fontSize: 11 }}>{Icon.check({ width: 10, height: 10 })} Paid · {a.paidMethod}</span>
               ) : (
-                <button onClick={onMarkPaid} className="btn btn-secondary btn-sm">Mark paid</button>
+                <button onClick={() => onMarkPaid(a)} className="btn btn-secondary btn-sm">Mark paid</button>
               )}
             </div>
           );

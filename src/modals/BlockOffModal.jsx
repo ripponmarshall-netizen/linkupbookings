@@ -3,6 +3,7 @@ import ModalShell from '../components/ModalShell.jsx';
 import { Icon } from '../components/shared.jsx';
 import { useApp } from '../context/AppContext.jsx';
 import { DAYS, DAY_DATES } from '../data/seed.js';
+import { validateTimeRange } from '../utils/scheduling.js';
 
 export default function BlockOffModal({ onClose }) {
   const { addBlock } = useApp();
@@ -11,6 +12,7 @@ export default function BlockOffModal({ onClose }) {
   const [toTime, setToTime] = useState('2:00pm');
   const [reason, setReason] = useState('Lunch break');
   const [recurring, setRecurring] = useState(false);
+  const [error, setError] = useState('');
 
   const reasons = [
     { l: 'Lunch break',    i: '💫', color: 'var(--ochre)'      },
@@ -20,24 +22,18 @@ export default function BlockOffModal({ onClose }) {
     { l: 'Just blocked',   i: '—',  color: 'var(--muted)'     },
   ];
 
-  // Time string ("1:30pm") to a decimal hour (13.5) to match seed data
-  function parseDisplayTime(t) {
-    const match = t.match(/^(\d+)(?::(\d+))?(am|pm)$/i);
-    if (!match) return t;
-    let h = parseInt(match[1]);
-    const m = match[2] ? parseInt(match[2]) : 0;
-    const ampm = match[3].toLowerCase();
-    if (ampm === 'pm' && h !== 12) h += 12;
-    if (ampm === 'am' && h === 12) h = 0;
-    return h + m / 60;
-  }
-
   function handleBlock() {
+    const range = validateTimeRange(fromTime, toTime);
+    if (range.error) {
+      setError(range.error);
+      return;
+    }
+
     addBlock({
       id: 'b' + Date.now(),
       dayIdx: selectedDay,
-      start: parseDisplayTime(fromTime),
-      end: parseDisplayTime(toTime),
+      start: range.start,
+      end: range.end,
       reason,
       recurring,
     });
@@ -88,7 +84,7 @@ export default function BlockOffModal({ onClose }) {
             <input
               className="input"
               value={fromTime}
-              onChange={e => setFromTime(e.target.value)}
+              onChange={e => { setFromTime(e.target.value); setError(''); }}
             />
           </div>
           <div>
@@ -96,7 +92,7 @@ export default function BlockOffModal({ onClose }) {
             <input
               className="input"
               value={toTime}
-              onChange={e => setToTime(e.target.value)}
+              onChange={e => { setToTime(e.target.value); setError(''); }}
             />
           </div>
         </div>
@@ -121,6 +117,12 @@ export default function BlockOffModal({ onClose }) {
             ))}
           </div>
         </div>
+
+        {error && (
+          <div role="alert" style={{ color: 'var(--terracotta)', fontSize: 12.5, marginBottom: 14 }}>
+            {error}
+          </div>
+        )}
 
         <div style={{
           padding: 14, background: 'var(--card)', border: '1px solid var(--line)',

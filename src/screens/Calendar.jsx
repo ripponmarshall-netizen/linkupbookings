@@ -10,6 +10,7 @@ import MarkPaidModal from '../modals/MarkPaidModal.jsx';
 import ApptDetailModal from '../modals/ApptDetailModal.jsx';
 import UpgradeModal from '../modals/UpgradeModal.jsx';
 import ShareLinkModal from '../modals/ShareLinkModal.jsx';
+import { findNextUnpaidAppointment } from '../utils/payments.js';
 
 const TODAY_IDX = 1; // Tue
 const HOURS = [9, 10, 11, 12, 13, 14, 15, 16, 17];
@@ -23,13 +24,15 @@ export default function CalendarScreen() {
   const [dayIdx, setDayIdx] = useState(TODAY_IDX);
   const [modal, setModal] = useState(null);
   const [selectedAppt, setSelectedAppt] = useState(null);
+  const [paymentAppt, setPaymentAppt] = useState(null);
+  const nextUnpaid = findNextUnpaidAppointment(appts, TODAY_IDX);
 
   const openAppt = (a) => { setSelectedAppt(a); setModal('appt'); };
 
   const action = (
     <div style={{ display: 'flex', gap: 8 }}>
-      <button className="btn btn-secondary btn-sm hide-mobile" onClick={() => setModal('markpaid')}>
-        {Icon.cash({ width: 13, height: 13 })} Walk-in
+      <button className="btn btn-secondary btn-sm hide-mobile" disabled={!nextUnpaid} onClick={() => { setPaymentAppt(nextUnpaid); setModal('markpaid'); }}>
+        {Icon.cash({ width: 13, height: 13 })} Mark paid
       </button>
       <button className="btn btn-secondary btn-sm hide-mobile" onClick={() => setModal('blockoff')}>
         {Icon.lock({ width: 12, height: 12 })} Block off
@@ -224,7 +227,7 @@ export default function CalendarScreen() {
       {modal === 'add'      && <AddApptModal    onClose={() => setModal(null)} />}
       {modal === 'blockoff' && <BlockOffModal   onClose={() => setModal(null)} />}
       {modal === 'fillslot' && <FillSlotModal   onClose={() => setModal(null)} />}
-      {modal === 'markpaid' && <MarkPaidModal   onClose={() => setModal(null)} />}
+      {modal === 'markpaid' && paymentAppt && <MarkPaidModal appt={paymentAppt} onClose={() => { setModal(null); setPaymentAppt(null); }} />}
       {modal === 'upgrade'  && <UpgradeModal    onClose={() => setModal(null)} />}
       {modal === 'share'    && <ShareLinkModal  onClose={() => setModal(null)} />}
       {modal === 'appt' && selectedAppt && <ApptDetailModal appt={selectedAppt} onClose={() => { setModal(null); setSelectedAppt(null); }} />}
