@@ -2,7 +2,7 @@ import { useState } from 'react';
 import DashboardShell from '../components/DashboardShell.jsx';
 import { Icon, Avatar } from '../components/shared.jsx';
 import { useApp } from '../context/AppContext.jsx';
-import { fmtTime, fmtJ, DAYS, DAY_DATES, MONTH } from '../data/seed.js';
+import { fmtTime, fmtJ, DAYS, DAY_DATES, MONTH, findClient, findService } from '../data/seed.js';
 import AddApptModal from '../modals/AddApptModal.jsx';
 import BlockOffModal from '../modals/BlockOffModal.jsx';
 import FillSlotModal from '../modals/FillSlotModal.jsx';
