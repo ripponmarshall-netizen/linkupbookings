@@ -1,106 +1,81 @@
-import { useState } from 'react';
 import ModalShell from '../components/ModalShell.jsx';
 import { Icon } from '../components/shared.jsx';
+import { useToast } from '../components/Toast.jsx';
+import { copyToClipboard, shareLink, openLink, waLink, smsLink, printPage } from '../utils/actions.js';
 
 export default function ShareLinkModal({ onClose }) {
-  const [copied, setCopied] = useState(false);
+  const { toast } = useToast();
+  const link = 'lup.bk/glow';
+  const url = `https://${link}`;
+  const text = `Book your appointment with Glow Nail Studio ✨ ${url}`;
 
-  function handleCopy() {
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1400);
+  async function copy() {
+    const ok = await copyToClipboard(url);
+    toast(ok ? 'Link copied' : 'Copy failed', { tone: ok ? 'success' : 'error' });
+  }
+
+  function shareTo(channel) {
+    if (channel === 'WhatsApp') return openLink(waLink('', text));
+    if (channel === 'SMS') return openLink(smsLink('', text));
+    // Instagram / Facebook have no reliable web share intent — use the native
+    // share sheet where available, otherwise fall back to copying the link.
+    shareLink({ title: 'Glow Nail Studio', text, url }).then(result => {
+      if (result === 'copied') toast('Link copied — paste it into ' + channel);
+      else if (result === 'failed') toast('Could not share', { tone: 'error' });
+    });
   }
 
   return (
-    <ModalShell onClose={onClose} width={520}>
-      <div style={{ padding: '24px 28px 8px', borderBottom: '1px solid var(--line)' }}>
+    <ModalShell onClose={onClose} width={460}>
+      <div style={{ padding: '20px 24px 14px', borderBottom: '1px solid var(--line)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-          <div className="label">Your booking link</div>
-          <button onClick={onClose} style={{ color: 'var(--muted)' }}>
+          <div className="label">Share booking link</div>
+          <button onClick={onClose} aria-label="Close" style={{ color: 'var(--muted)' }}>
             {Icon.x({ width: 16, height: 16 })}
           </button>
         </div>
-        <h2 className="serif" style={{ fontSize: 28, margin: 0, fontWeight: 400, lineHeight: 1.1 }}>
-          Share this <span style={{ fontStyle: 'italic' }}>everywhere</span>.
+        <h2 className="serif" style={{ fontSize: 26, margin: 0, fontWeight: 400, lineHeight: 1.1 }}>
+          Get more bookings
         </h2>
       </div>
 
-      <div style={{ padding: 24, overflowY: 'auto' }}>
-        {/* link + copy */}
-        <div style={{
-          display: 'flex', alignItems: 'stretch', marginBottom: 18,
-          background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 10,
-          overflow: 'hidden',
-        }}>
-          <div style={{
-            padding: '14px 16px', flex: 1,
-            fontFamily: 'var(--mono)', fontSize: 14, color: 'var(--ink)',
-            display: 'flex', alignItems: 'center',
-          }}>
-            <span style={{ color: 'var(--muted)' }}>book.linkupbookings.com/</span>
-            <span style={{ fontWeight: 600 }}>glow</span>
-          </div>
-          <button
-            onClick={handleCopy}
-            style={{
-              background: copied ? 'var(--forest)' : 'var(--ink)',
-              color: '#fbf6ec', padding: '0 18px', fontSize: 12.5,
-              display: 'flex', alignItems: 'center', gap: 6,
-              transition: 'background 200ms',
-            }}
-          >
-            {copied ? Icon.check({ width: 14, height: 14 }) : Icon.copy({ width: 14, height: 14 })}
-            {copied ? 'Copied' : 'Copy'}
-          </button>
+      <div style={{ padding: 24 }}>
+        <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+          <input className="input" value={link} readOnly aria-label="Booking link" style={{ flex: 1, fontFamily: 'var(--mono)' }} />
+          <button className="btn btn-primary btn-sm" onClick={copy}>{Icon.copy({ width: 13, height: 13 })} Copy</button>
         </div>
 
-        {/* share targets */}
-        <div className="label" style={{ marginBottom: 8 }}>Share to</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 24 }}>
+        <div className="label" style={{ marginBottom: 12 }}>Share to</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 24 }}>
           {[
-            { l: 'WhatsApp', i: Icon.whatsapp, c: '#25d366'       },
-            { l: 'Instagram', i: Icon.globe,   c: '#c4663d'       },
-            { l: 'SMS',       i: Icon.msg,     c: 'var(--forest)' },
-            { l: 'Email',     i: Icon.bell,    c: 'var(--plum)'   },
-          ].map((s, i) => (
-            <button
-              key={i}
-              style={{
-                padding: '14px 8px', borderRadius: 10, background: 'var(--card)',
-                border: '1px solid var(--line)',
-                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
-              }}
-            >
-              <span style={{ color: s.c }}>{s.i({ width: 18, height: 18 })}</span>
-              <span style={{ fontSize: 11.5 }}>{s.l}</span>
+            { l: 'WhatsApp', i: Icon.whatsapp },
+            { l: 'Instagram', i: Icon.instagram },
+            { l: 'Facebook', i: Icon.share },
+            { l: 'SMS', i: Icon.msg },
+          ].map(({ l, i }) => (
+            <button key={l} onClick={() => shareTo(l)} style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+              padding: '14px 8px', background: 'var(--card)', border: '1px solid var(--line)',
+              borderRadius: 10, fontSize: 11, color: 'var(--ink-2)',
+            }}>
+              {i({ width: 22, height: 22 })}
+              {l}
             </button>
           ))}
         </div>
 
-        {/* QR */}
-        <div style={{
-          display: 'flex', gap: 18, alignItems: 'center',
-          padding: 18, background: 'var(--paper-2)', borderRadius: 12,
-        }}>
+        <div style={{ background: 'var(--paper-2)', borderRadius: 12, padding: 18, textAlign: 'center' }}>
           <div style={{
-            width: 90, height: 90, background: '#fff', padding: 6,
-            border: '1px solid var(--line)', borderRadius: 8,
-            display: 'grid', gridTemplateColumns: 'repeat(11, 1fr)', gap: 0,
+            width: 120, height: 120, margin: '0 auto 12px', background: 'var(--card)',
+            border: '1px solid var(--line)', borderRadius: 8, display: 'flex',
+            alignItems: 'center', justifyContent: 'center',
           }}>
-            {Array.from({ length: 121 }).map((_, i) => {
-              const r = Math.floor(i / 11), c = i % 11;
-              const corner = (r < 3 && c < 3) || (r < 3 && c > 7) || (r > 7 && c < 3);
-              const cornerFill = (r === 0 || r === 2 || r === 6 || r === 8 || c === 0 || c === 2 || c === 6 || c === 8);
-              const fill = corner ? cornerFill : ((i * 17 + 3) % 7 < 3);
-              return <div key={i} style={{ background: fill ? '#1a201d' : '#fff' }} />;
-            })}
+            {Icon.qr ? Icon.qr({ width: 80, height: 80 }) : <span className="mono" style={{ fontSize: 10 }}>QR</span>}
           </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 13.5, fontWeight: 500, marginBottom: 4 }}>Add to your storefront</div>
-            <div style={{ fontSize: 11.5, color: 'var(--muted)', lineHeight: 1.5, marginBottom: 10 }}>
-              Print this QR and stick it on your mirror. Clients scan, book themselves in.
-            </div>
-            <button className="btn btn-secondary btn-sm">Download PDF</button>
-          </div>
+          <div style={{ fontSize: 12, color: 'var(--muted)' }}>Scan to book · print for your salon</div>
+          <button className="btn btn-secondary btn-sm" style={{ marginTop: 12 }} onClick={() => { toast('Opening print dialog…'); printPage(); }}>
+            {Icon.download ? Icon.download({ width: 13, height: 13 }) : null} Download PDF
+          </button>
         </div>
       </div>
     </ModalShell>
