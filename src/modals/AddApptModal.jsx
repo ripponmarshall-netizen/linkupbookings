@@ -4,6 +4,13 @@ import { Icon, Avatar } from '../components/shared.jsx';
 import { useApp } from '../context/AppContext.jsx';
 import { DAYS, DAY_DATES, fmtJ } from '../data/seed.js';
 
+const TIME_MAP = {
+  '9:00am': 9, '10:00am': 10, '11:00am': 11,
+  '12:00pm': 12, '1:30pm': 13.5, '3:00pm': 15,
+  '4:30pm': 16.5, '6:00pm': 18,
+};
+const TIMES = ['9:00am', '10:00am', '11:00am', '12:00pm', '1:30pm', '3:00pm', '4:30pm', '6:00pm'];
+
 export default function AddApptModal({ onClose }) {
   const { addAppt, addClient, clients, services } = useApp();
   const [step, setStep] = useState(1);
@@ -26,7 +33,7 @@ export default function AddApptModal({ onClose }) {
     if (!name) return;
     const newClient = {
       id: 'c' + Date.now(), name, phone: '', email: '',
-      visits: 0, lifetime: 0, lastVisit: 'never', tags: ['New'], notes: '',
+      visits: 0, lifetime: 0, last: 'never', tags: ['New'], notes: '',
     };
     addClient(newClient);
     setClient(newClient);
@@ -35,14 +42,9 @@ export default function AddApptModal({ onClose }) {
   }
 
   function handleConfirm() {
-    // Map display time to a decimal hour (9.5 = 9:30am) to match seed data
-    const timeMap = {
-      '9:00am': 9, '10:00am': 10, '11:00am': 11,
-      '12:00pm': 12, '1:30pm': 13.5, '3:00pm': 15,
-      '4:30pm': 16.5, '6:00pm': 18,
-    };
     if (!client || !service) return;
-    const start = timeMap[time] ?? 11;
+    // Map display time to a decimal hour (9.5 = 9:30am) to match seed data
+    const start = TIME_MAP[time] ?? 11;
     const end = start + service.duration / 60;
 
     addAppt({
@@ -66,7 +68,7 @@ export default function AddApptModal({ onClose }) {
       <div style={{ padding: '20px 24px 14px', borderBottom: '1px solid var(--line)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
           <div className="label">New appointment</div>
-          <button onClick={onClose} style={{ color: 'var(--muted)' }}>
+          <button onClick={onClose} aria-label="Close" style={{ color: 'var(--muted)' }}>
             {Icon.x({ width: 16, height: 16 })}
           </button>
         </div>
@@ -119,8 +121,6 @@ export default function AddApptModal({ onClose }) {
                     padding: 10, borderRadius: 10, textAlign: 'left',
                     background: client?.id === c.id ? 'var(--paper-2)' : 'transparent',
                   }}
-                  onMouseEnter={e => e.currentTarget.style.background = 'var(--paper-2)'}
-                  onMouseLeave={e => e.currentTarget.style.background = client?.id === c.id ? 'var(--paper-2)' : 'transparent'}
                 >
                   <Avatar name={c.name} size={32} />
                   <div style={{ flex: 1 }}>
@@ -185,7 +185,7 @@ export default function AddApptModal({ onClose }) {
             <div style={{ marginBottom: 16 }}>
               <label className="label">Time</label>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6 }}>
-                {['9:00am', '10:00am', '11:00am', '12:00pm', '1:30pm', '3:00pm', '4:30pm', '6:00pm'].map(t => (
+                {TIMES.map(t => (
                   <button
                     key={t}
                     onClick={() => setTime(t)}
@@ -216,6 +216,7 @@ export default function AddApptModal({ onClose }) {
                 </div>
                 <button
                   onClick={() => setRequireDeposit(!requireDeposit)}
+                  aria-label="Toggle require deposit"
                   style={{
                     width: 38, height: 22, borderRadius: 11,
                     background: requireDeposit ? 'var(--forest)' : 'var(--line-2)',
