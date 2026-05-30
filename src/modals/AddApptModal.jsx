@@ -11,10 +11,10 @@ const TIME_MAP = {
 };
 const TIMES = ['9:00am', '10:00am', '11:00am', '12:00pm', '1:30pm', '3:00pm', '4:30pm', '6:00pm'];
 
-export default function AddApptModal({ onClose }) {
+export default function AddApptModal({ onClose, initialClient = null }) {
   const { addAppt, addClient, clients, services } = useApp();
-  const [step, setStep] = useState(1);
-  const [client, setClient] = useState(null);
+  const [step, setStep] = useState(initialClient ? 2 : 1);
+  const [client, setClient] = useState(initialClient);
   const [service, setService] = useState(services[0]);
   const [dayIdx, setDayIdx] = useState(1);
   const [time, setTime] = useState('11:00am');

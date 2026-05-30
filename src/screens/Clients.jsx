@@ -3,6 +3,7 @@ import DashboardShell from '../components/DashboardShell.jsx';
 import { Icon, Avatar } from '../components/shared.jsx';
 import { useApp } from '../context/AppContext.jsx';
 import { fmtJ, fmtTime } from '../data/seed.js';
+import AddApptModal from '../modals/AddApptModal.jsx';
 
 export default function ClientsScreen() {
   const { clients, appts, services, isPro, addClient } = useApp();
@@ -95,7 +96,7 @@ export default function ClientsScreen() {
                 {c.tags.length > 0 && (
                   <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                     {c.tags.map(t => (
-                      <span key={t} className={`chip chip-${t === 'VIP' ? 'ochre' : t === 'Regular' ? 'forest' : ''}`}
+                      <span key={t} className={`chip chip-${t === 'VIP' ? 'ochre' : t === 'Regular' ? 'forest' : 'terracotta'}`}
                         style={{ fontSize: 10, padding: '1px 8px' }}>{t}</span>
                     ))}
                   </div>
@@ -127,6 +128,7 @@ function ClientDetail({ client, appts, services, isPro, onBack }) {
   const { updateClient } = useApp();
   const [tab, setTab] = useState('overview');
   const [notes, setNotes] = useState(client.notes || '');
+  const [booking, setBooking] = useState(false);
   const history = appts.filter(a => a.clientId === client.id);
 
   const saveNotes = () => {
@@ -165,7 +167,7 @@ function ClientDetail({ client, appts, services, isPro, onBack }) {
               ))}
             </div>
           </div>
-          <button className="btn btn-primary btn-sm">{Icon.plus({ width: 12, height: 12 })} Book</button>
+          <button className="btn btn-primary btn-sm" onClick={() => setBooking(true)}>{Icon.plus({ width: 12, height: 12 })} Book</button>
         </div>
 
         {/* Stats */}
@@ -212,7 +214,7 @@ function ClientDetail({ client, appts, services, isPro, onBack }) {
 
         {tab === 'appointments' && (
           <div>
-            <div className="label" style={{ marginBottom: 10 }}>{history.length} appointments this week</div>
+            <div className="label" style={{ marginBottom: 10 }}>{history.length} appointments</div>
             {history.map(a => {
               const s = services.find(service => service.id === a.serviceId) || {};
               return (
@@ -224,7 +226,7 @@ function ClientDetail({ client, appts, services, isPro, onBack }) {
                     <div style={{ fontSize: 13.5, fontWeight: 500 }}>{s.name}</div>
                     <div style={{ fontSize: 11.5, color: 'var(--muted)' }}>{['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][a.dayIdx]} · {fmtTime(a.start)}</div>
                   </div>
-                  <span className={`chip chip-${a.status === 'confirmed' ? 'forest' : ''}`} style={{ fontSize: 10 }}>
+                  <span className={`chip chip-${a.status === 'confirmed' ? 'forest' : 'ochre'}`} style={{ fontSize: 10 }}>
                     {a.status}
                   </span>
                   {a.deposit > 0 && <span style={{ fontSize: 12, color: 'var(--muted)' }}>{fmtJ(a.deposit)} dep</span>}
@@ -260,6 +262,8 @@ function ClientDetail({ client, appts, services, isPro, onBack }) {
           </div>
         )}
       </div>
+
+      {booking && <AddApptModal initialClient={client} onClose={() => setBooking(false)} />}
     </div>
   );
 }

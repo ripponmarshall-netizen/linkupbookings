@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import DashboardShell from '../components/DashboardShell.jsx';
 import { useToast } from '../components/Toast.jsx';
 import { insertToken } from '../utils/actions.js';
+import { useLocalStorage } from '../utils/useLocalStorage.js';
 
 const INITIAL = {
   '24h': { on: true,  channel: 'whatsapp', timing: '24 hours before', label: '24-hour reminder',
@@ -17,7 +18,7 @@ const INITIAL = {
 };
 
 export default function RemindersScreen() {
-  const [reminders, setReminders] = useState(INITIAL);
+  const [reminders, setReminders] = useLocalStorage('lup_reminders', INITIAL);
   const [selected, setSelected] = useState('24h');
 
   function addCustom() {
