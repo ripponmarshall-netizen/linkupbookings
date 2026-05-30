@@ -2,7 +2,7 @@ import { useState } from 'react';
 import DashboardShell from '../components/DashboardShell.jsx';
 import { Icon, Avatar } from '../components/shared.jsx';
 import { useApp } from '../context/AppContext.jsx';
-import { fmtTime, fmtJ, DAYS, DAY_DATES, MONTH, findClient, findService } from '../data/seed.js';
+import { fmtTime, fmtJ, DAYS, DAY_DATES, MONTH } from '../data/seed.js';
 import AddApptModal from '../modals/AddApptModal.jsx';
 import BlockOffModal from '../modals/BlockOffModal.jsx';
 import FillSlotModal from '../modals/FillSlotModal.jsx';
@@ -11,6 +11,7 @@ import ApptDetailModal from '../modals/ApptDetailModal.jsx';
 import UpgradeModal from '../modals/UpgradeModal.jsx';
 import ShareLinkModal from '../modals/ShareLinkModal.jsx';
 import { findNextUnpaidAppointment } from '../utils/payments.js';
+import { openLink, waLink } from '../utils/actions.js';
 
 const TODAY_IDX = 1; // Tue
 const HOURS = [9, 10, 11, 12, 13, 14, 15, 16, 17];
@@ -329,8 +330,8 @@ function TodayPanel({ appts, onAppt, onFillSlot }) {
               <div className="serif" style={{ fontSize: 22, lineHeight: 1.05, marginBottom: 4 }}>{c.name}</div>
               <div style={{ fontSize: 12, color: 'var(--ink-2)', marginBottom: 10 }}>{s.name} · {fmtTime(upcoming.start)}</div>
               <div style={{ display: 'flex', gap: 6 }}>
-                <button className="btn btn-secondary btn-sm" style={{ flex: 1 }}>{Icon.whatsapp({ width: 12, height: 12 })} Message</button>
-                <button className="btn btn-secondary btn-sm" style={{ flex: 1 }}>{Icon.phone({ width: 12, height: 12 })} Call</button>
+                <button className="btn btn-secondary btn-sm" style={{ flex: 1 }} onClick={() => openLink(waLink(c.phone, `Hi ${c.name?.split(' ')[0] || ''}! See yuh soon for your ${s.name || 'appointment'} at ${fmtTime(upcoming.start)}.`))}>{Icon.whatsapp({ width: 12, height: 12 })} Message</button>
+                <button className="btn btn-secondary btn-sm" style={{ flex: 1 }} onClick={() => openLink(`tel:${c.phone || ''}`)}>{Icon.phone({ width: 12, height: 12 })} Call</button>
               </div>
               {c.notes && (
                 <div style={{ marginTop: 10, background: 'var(--paper-2)', borderRadius: 8, padding: '8px 10px', fontSize: 11.5, lineHeight: 1.45, color: 'var(--ink-2)', borderLeft: '3px solid var(--ochre)' }}>

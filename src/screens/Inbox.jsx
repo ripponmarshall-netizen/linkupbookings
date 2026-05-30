@@ -134,7 +134,7 @@ export default function InboxScreen() {
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button aria-label="Call client" style={{ color: 'var(--muted)' }} onClick={() => openLink(`tel:${findClient(selected.clientId).phone || ''}`)}>{Icon.phone({ width: 18, height: 18 })}</button>
-                  <button aria-label="Open in WhatsApp" style={{ color: 'var(--muted)' }} onClick={() => openLink(waLink(findClient(selected.clientId).phone))}>{Icon.cal({ width: 18, height: 18 })}</button>
+                  <button aria-label="Open in WhatsApp" style={{ color: 'var(--muted)' }} onClick={() => openLink(waLink(findClient(selected.clientId).phone))}>{Icon.whatsapp({ width: 18, height: 18 })}</button>
                 </div>
               </div>
 

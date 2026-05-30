@@ -4,6 +4,7 @@ import { Icon, Avatar } from '../components/shared.jsx';
 import { findClient, findService, fmtJ } from '../data/seed.js';
 import { useToast } from '../components/Toast.jsx';
 import { openLink, waLink, smsLink } from '../utils/actions.js';
+import { useLocalStorage } from '../utils/useLocalStorage.js';
 
 const WaitlistContext = React.createContext(null);
 
@@ -47,9 +48,9 @@ const WAITLIST = [
 
 export default function WaitlistScreen() {
   const { toast } = useToast();
-  const [autoFill, setAutoFill] = React.useState(true);
+  const [autoFill, setAutoFill] = useLocalStorage('lup_waitlist_autofill', true);
   const [tab, setTab] = React.useState('queue');
-  const [list, setList] = React.useState(WAITLIST);
+  const [list, setList] = useLocalStorage('lup_waitlist', WAITLIST);
   const matchedCount = list.filter(w => w.matched).length;
 
   const removeFromList = (id) => setList(l => l.filter(w => w.id !== id));
@@ -259,7 +260,7 @@ const RULE_DEFS = [
 ];
 
 function WaitlistRules() {
-  const [rules, setRules] = React.useState(() => RULE_DEFS.map(([, on]) => on));
+  const [rules, setRules] = useLocalStorage('lup_waitlist_rules', () => RULE_DEFS.map(([, on]) => on));
   const toggle = (i) => setRules(r => r.map((v, j) => j === i ? !v : v));
   return (
     <div style={{ flex: 1, overflow: 'auto', padding: '24px 32px', background: 'var(--paper)' }}>
