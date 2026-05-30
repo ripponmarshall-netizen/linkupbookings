@@ -334,6 +334,19 @@ img { height: auto; }
   transform: translateX(0);
 }
 
+/* Landing mobile menu trigger — hidden on desktop, shown <=640px (see line ~390) */
+.landing-hamburger {
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+.landing-drawer-link {
+  padding: 14px 20px;
+  font-size: 16px;
+  color: var(--ink);
+  border-bottom: 1px solid var(--line);
+}
+
 /* ── Modal shell ── */
 .modal-backdrop {
   position: fixed; inset: 0; z-index: 500;

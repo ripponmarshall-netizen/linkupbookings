@@ -1,11 +1,17 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Icon, Logo, Avatar } from '../components/shared.jsx';
 
 export default function LandingScreen() {
   const navigate = useNavigate();
-  const goCta = () => navigate('/onboarding');
-  const goSignIn = () => navigate('/calendar');
-  const scrollTo = (id) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const [menuOpen, setMenuOpen] = useState(false);
+  const closeMenu = () => setMenuOpen(false);
+  const goCta = () => { closeMenu(); navigate('/onboarding'); };
+  const goSignIn = () => { closeMenu(); navigate('/calendar'); };
+  const scrollTo = (id) => {
+    closeMenu();
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   return (
     <div className="page-scroll" style={{ background: 'var(--paper)', color: 'var(--ink)' }}>
@@ -19,10 +25,59 @@ export default function LandingScreen() {
           <a style={{ cursor: 'pointer' }} onClick={goCta}>Help</a>
         </div>
         <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-          <button className="btn btn-ghost btn-sm" onClick={goSignIn}>Sign in</button>
-          <button className="btn btn-primary btn-sm" onClick={goCta}>Start free trial</button>
+          <button className="btn btn-ghost btn-sm hide-mobile" onClick={goSignIn}>Sign in</button>
+          <button className="btn btn-primary btn-sm hide-mobile" onClick={goCta}>Start free trial</button>
+          <button
+            className="landing-hamburger"
+            type="button"
+            aria-label="Open navigation menu"
+            aria-expanded={menuOpen}
+            aria-controls="landing-mobile-menu"
+            onClick={() => setMenuOpen(true)}
+            style={{ color: 'var(--ink)', padding: 4, background: 'none', border: 0 }}
+          >
+            {Icon.menu({ width: 22, height: 22 })}
+          </button>
         </div>
       </div>
+
+      {/* mobile menu drawer */}
+      {menuOpen && (
+        <div className="drawer-overlay" onClick={closeMenu} style={{ display: 'block' }}>
+          <div
+            className="drawer-panel landing-drawer-panel open"
+            id="landing-mobile-menu"
+            role="dialog"
+            aria-label="Navigation menu"
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '20px 20px 16px', borderBottom: '1px solid var(--line)',
+            }}>
+              <Logo size={16} />
+              <button
+                type="button"
+                aria-label="Close navigation menu"
+                onClick={closeMenu}
+                style={{ color: 'var(--ink)', padding: 4, background: 'none', border: 0 }}
+              >
+                {Icon.x({ width: 20, height: 20 })}
+              </button>
+            </div>
+            <nav style={{ display: 'flex', flexDirection: 'column', padding: '8px 0' }}>
+              <a className="landing-drawer-link" style={{ cursor: 'pointer' }} onClick={() => scrollTo('features')}>Features</a>
+              <a className="landing-drawer-link" style={{ cursor: 'pointer' }} onClick={() => scrollTo('pricing')}>Pricing</a>
+              <a className="landing-drawer-link" style={{ cursor: 'pointer' }} onClick={() => scrollTo('features')}>For solo pros</a>
+              <a className="landing-drawer-link" style={{ cursor: 'pointer' }} onClick={goCta}>Help</a>
+            </nav>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '16px 20px', borderTop: '1px solid var(--line)' }}>
+              <button className="btn btn-ghost btn-sm" onClick={goSignIn} style={{ width: '100%' }}>Sign in</button>
+              <button className="btn btn-primary btn-sm" onClick={goCta} style={{ width: '100%' }}>Start free trial</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* hero */}
       <div style={{ padding: '88px 56px 64px', maxWidth: 1280, margin: '0 auto' }} className="landing-hero-wrap">
