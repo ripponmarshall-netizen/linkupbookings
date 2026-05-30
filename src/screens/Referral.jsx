@@ -2,8 +2,34 @@ import React from 'react';
 import DashboardShell from '../components/DashboardShell.jsx';
 import { Icon, Avatar } from '../components/shared.jsx';
 import { fmtJ } from '../data/seed.js';
+import { useToast } from '../components/Toast.jsx';
+import { copyToClipboard, waLink, openLink } from '../utils/actions.js';
+
+const REFERRAL_URL = 'https://linkupbookings.com/r/tanyaW';
 
 export default function ReferralScreen() {
+  const { toast } = useToast();
+  const [phone, setPhone] = React.useState('');
+  const [showInvite, setShowInvite] = React.useState(false);
+
+  async function copyLink() {
+    const ok = await copyToClipboard(REFERRAL_URL);
+    toast(ok ? 'Referral link copied' : 'Copy failed', { tone: ok ? 'success' : 'error' });
+  }
+
+  function shareWhatsApp() {
+    openLink(waLink('', `Join me on LinkUpBookings — we both get J$400 off 💚 ${REFERRAL_URL}`));
+  }
+
+  function sendInvite() {
+    const num = phone.trim();
+    if (!num) return;
+    openLink(waLink(num, `Hey! Join me on LinkUpBookings and we both earn J$400 off: ${REFERRAL_URL}`));
+    toast('Opening WhatsApp invite…');
+    setPhone('');
+    setShowInvite(false);
+  }
+
   const referrals = [
     { name: 'Andrea — Andrea Cuts', stage: 'paid', date: '2 weeks ago', reward: 'J$400 credit · applied' },
     { name: 'Shantel — Lash by Shan', stage: 'trial', date: '4 days ago', reward: 'Trial — earn when she upgrades' },
@@ -47,10 +73,10 @@ export default function ReferralScreen() {
                 Yuh barber friend, yuh stylist cousin, yuh lash girl — every owner who upgrades from yuh link gets J$400 off, and yuh get J$400 off too. No limit.
               </p>
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                <button className="btn btn-terracotta btn-lg">
+                <button className="btn btn-terracotta btn-lg" onClick={shareWhatsApp}>
                   {Icon.whatsapp({ width: 16, height: 16 })} Share on WhatsApp
                 </button>
-                <button style={{
+                <button onClick={copyLink} style={{
                   background: 'rgba(251,246,236,0.08)', color: '#fbf6ec',
                   padding: '14px 22px', borderRadius: 8, fontSize: 15, fontWeight: 500,
                   border: '1px solid rgba(251,246,236,0.18)',
@@ -134,9 +160,25 @@ export default function ReferralScreen() {
                 ))}
               </div>
 
-              <button className="btn btn-secondary" style={{ marginTop: 14 }}>
-                {Icon.plus({ width: 13, height: 13 })} Invite by phone number
-              </button>
+              {showInvite ? (
+                <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
+                  <input
+                    className="input"
+                    value={phone}
+                    onChange={e => setPhone(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter') sendInvite(); }}
+                    placeholder="+1 876 555 0000"
+                    aria-label="Phone number to invite"
+                    autoFocus
+                    style={{ flex: 1 }}
+                  />
+                  <button className="btn btn-primary" onClick={sendInvite} disabled={!phone.trim()}>Send</button>
+                </div>
+              ) : (
+                <button className="btn btn-secondary" style={{ marginTop: 14 }} onClick={() => setShowInvite(true)}>
+                  {Icon.plus({ width: 13, height: 13 })} Invite by phone number
+                </button>
+              )}
             </div>
 
             {/* preview */}
@@ -169,7 +211,7 @@ export default function ReferralScreen() {
                   <button style={{
                     background: 'var(--terracotta)', color: '#fbf6ec',
                     padding: '10px 16px', borderRadius: 8, fontSize: 13, fontWeight: 500, width: '100%',
-                  }}>Claim J$400 off →</button>
+                  }} onClick={shareWhatsApp}>Claim J$400 off →</button>
                   <div className="mono" style={{ fontSize: 9.5, color: 'var(--muted)', textAlign: 'center', marginTop: 8, letterSpacing: '0.06em' }}>
                     LINKUPBOOKINGS.COM/R/TANYAW
                   </div>
